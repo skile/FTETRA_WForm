@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<fr_tetra>
+  <logger>
+    <txt>log.txt</txt>
+    <warning_level>0</warning_level>
+  </logger>
+  <db>
+    <DSN>SICOMSQL</DSN>
+    <Uid>sa</Uid>
+    <Pwd>sasql</Pwd>
+  </db>
+  <acapi>
+    <user>app</user>
+    <pwd>app</pwd>
+    <acapi_ip>172.31.1.1</acapi_ip>
+    <app_ack_timeout_sec>160</app_ack_timeout_sec>
+  </acapi>
+  <!--
+  Los archivos subscriber_1.xml y groups_1.xml de la maquina NMS contienen informacion estatica sde los usuarios y pertenencias de la infraestructura TETRA
+    subscriber_1.xml  - Contiene todos los SSIs del sistema, así como información del tipo de ssi ( grupo estatico, dinamico, extensible,.. )
+    groups_1.xml      - Contiene información de las pertenencias estáticas de los ssi de terminales a grupos estaticos o extensibles  
+  -->
+  <nms>
+    <nms_ip>10.201.2.62</nms_ip>
+    <nms_xml_subscriber_route>\ndc500\cfg-515\Stationen\PNP1\subscriber\xml\subscriber_1.xml</nms_xml_subscriber_route>
+    <nms_xml_groups_route>\ndc500\cfg-515\Stationen\PNP1\subscriber\xml\groups_1.xml</nms_xml_groups_route>
+    <nms_xml_subscriber_last_mod>04/12/2012 16:59:03</nms_xml_subscriber_last_mod>
+    <nms_xml_groups_last_mod>04/12/2012 16:59:02</nms_xml_groups_last_mod>
+  </nms>
+  <!--<nms_ip>10.178.101.62</nms_ip>-->
+  <!--172.20.222.1-->
+  <asterisk>
+    <ip>172.31.2.101</ip>
+  </asterisk>
+  <!--172.31.1.53-->
+  <!--
+  true: se intentará cambiar al canal/grupo por defecto cada vez que:
+          se despinche una linea
+          se elimine la pertenencia linea-grupo al cual la linea estaba asociada
+  -->
+  <retorno_al_grupo_defecto>
+    <enabled>false</enabled>
+  </retorno_al_grupo_defecto>
+  <acCore>
+    <local_ip>172.31.2.100</local_ip>
+    <local_port>13000</local_port>
+  </acCore>
+  <global_monitoring>
+    <begin_ssi>1000</begin_ssi>
+    <end_ssi>10000</end_ssi>
+    <num_wait_iterations>0</num_wait_iterations>
+  </global_monitoring>
+  <global_dgna>
+    <num_wait_iterations>2</num_wait_iterations>
+    <num_max_retries>10</num_max_retries>
+  </global_dgna>
+</fr_tetra>

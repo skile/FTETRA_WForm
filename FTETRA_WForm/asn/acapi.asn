@@ -1,0 +1,2372 @@
+-- ---------------------------------------------------------------------
+-- $Workfile: acapi.asn $
+-- Project: A-CAPI
+-- Subproject: Protocol definition
+-- Date of Creation: 07.08.2002
+-- Main Author: Ulrich Licher, ES-ul, and Volker Wilhelm, E1-wi (VA-vw, VA-vk)
+-- Copyright: (c) 2002 R&S BICK Mobilfunk GmbH.
+--            All Rights Reserved.
+--            N O T I C E
+--            THIS MATERIAL IS CONSIDERED A TRADE SECRET BY R&S.
+--            UNAUTHORIZED ACCESS, USE, REPRODUCTION OR
+--            DISTRIBUTION IS PROHIBITED.
+-- ---------------------------------------------------------------------
+-- Description:
+--   ASN.1 protocol definition for A-CAPI protocol
+-- ---------------------------------------------------------------------
+-- $History: $
+--
+-- KV 04.04.03  2006-02-23, E1-wi: Protocol version 6 (0,5), ACAPI-ICD 4.2, PV4.5 ff.
+--                                 New result in ACAPI-CloseService:
+--                                   mismatchPduAndService 
+--                                 The PDU MON-TxDemand will not be supported in future
+--
+-- KV 04.04.01  2006-01-25, E1-wi: The PDU CC-Information has been extended by the new optional field
+--                                   "dtmfError". The field can be used to indicate an error when
+--                                   DTMF-digits cannot be processed successfully.
+--                                 New/renamed results in ACAPI-CloseService:
+--                                   applicationConnectionLoss
+--                                   tcpError -> noConnectionToSwMI
+--                                 New predefined Integer values in DisconnectType:
+--                                    unknownMonitoringHandle
+--                                    callInWrongState
+--
+-- KV 04.03.03  2006-01-25, E1-wi: Protocol version 5 (0), ACAPI-ICD 4.1, PV4.5 ff.
+--                                 New PDUs for "Transmitting to Monitored Calls":
+--                                   MON-Uplink-TxDemand
+--                                   MON-Uplink-TxCeased
+--                                   MON-TxInterrupt
+--                                   The monitoring application can transmit to a monitored call using these PDUs.
+--                                 New PDUs for "Forced Call End" for Monitored Calls:
+--                                   MON-ForcedCallEnd
+--                                   MON-ForcedCallEnd-Ack
+--                                   If the application gains knowledge about an ongoing call and wants to
+--                                   terminate it, this must be done via the same link it got the information
+--                                   from, using these PDUs.
+--                                 New elements for "Call Authorisation by Dispatcher":
+--                                   In CC-Setup-Ind:  authorizationReq, callForwardingReason
+--                                   In CC-Setup-Ack:  authorizationReq
+--                                   In CC-Disconnect: authorizationGranted
+--                                   New Datatype:     callForwardingReasonType
+--                                   New field in data type SS-NotificationType: callAuthorizationByDispatcher
+--                                 New entries for the Monitoring PDUs:
+--                                   MON-CC-Information: groupMemberParty, elapsedTime, remainingTime, cliControl
+--                                   MON-TxCeased:       txReqPermission
+--                                   MON-TxGrant:        tpiRestriction
+--                                   MON-Disconnect:     callEnd
+--                                 Additional parameter "isStatus" in SDS-Data-Ack to distinguish between SDS-Data
+--                                   and SDS-Status acknowledge. Must be set from application for acknowledging
+--                                   an SDS-Data PDU of type "statusType".
+--                                 Additional parameter:
+--                                   In CC-Connect-Ind: callTimeOut
+--                                   In CC-Connect-Ack: callTimeOut
+--
+-- KV 03.01.01  2005-07-22, E1-wi: Protocol version 0, ACAPI-ICD 3.6, PV4.0 ff.
+--                                 Changed size of Integer datatypes:
+--                                   monFleet in MON-FleetMonitoring-Req/-Ack, MON-Close (from Int16 to Int)
+--                                   LocationAreaType.locationArea (from 0..16383 to Integer16)
+--                                 New predefined Integer values in:
+--                                   MON-Close.result
+--                                   SS-NotificationType
+--                                   CallStateType
+--                                   DisconnectType
+--                                   CallForwardingResultType
+--                                   SS-AbortCauseType
+--                                 Corrected keywords:
+--                                   MonitoringService.circuitModeTarget   -> circuitModeInitiator
+--                                   LocUpdateType.impliziteLocationUpdate -> implicitLocationUpdate
+--                                   LineInformationType.dailupLineHandle  -> dialupLineHandle
+--                                   LineResourceInfo.dailupLineInfo       -> dialupLineInfo
+--
+-- KV 03.00.01  2004-10-29, E1-wi: Protocol version 0, ACAPI-ICD 05, PV4.0 ff.
+--                                 New naming scheme for ACAPI releases and ASN.1 files:
+--                                   This is Release 3 which contains the PV4.0 features
+--                                   The first two digits in the version number of this file is always the release number
+--
+-- KV 02.01.05  2004-10-26, E1-wi: Corrected type of sdsHandle to Integer16 in Mon-SDS-PDUs
+--                                   Corrected comments for element sdsHandle in SDS-PDUs
+-- KV 02.01.04  2004-10-22, E1-wi: Removed elements calledExtSbscNo and callingExtSbscNo. These are not needed, as the
+--                                   complete address will be contained in calledParty/callingParty
+--                                 Improved Comment in CliType
+--                                 Improved layout to fit into ACAPI ICD
+--                                 Summarized Comments in Step PV3.25 -> PV 4.0
+-- KV 02.01.03  2004-09-02, E1-wi: New PDUs for Include Call, OOCA, Call Forwarding:
+-- (PV 4.0, TAP KV 02.01.02)         CC-SetupInclude-Req
+--                                   CC-CancelInclude
+--                                   CC-TxWait-Ind
+--                                   CC-TxWait-Req
+--                                   CC-TxWait-Ack
+--                                   CC-TxContinue-Ind
+--                                   CC-TxContinue-Req
+--                                   CC-TxContinue-Ack
+--                                   SS-CallForwardActivate
+--                                   SS-CallForwardActivate-Ack
+--                                   SS-CallForwardDeactivate
+--                                   SS-CallForwardDeactivate-Ack
+--                                   SS-CallForwardCancelAll
+--                                   SS-CallForwardCancel-Ack
+--                                   SS-CallForwardInterrogate
+--                                   SS-CallForwardInterrogate-Ack
+--                                   SS-ObjectIdentityAssign
+--                                   SS-ObjectIdentityAssign-Ack
+--                                   SS-ObjectIdentityDeassign
+--                                   SS-ObjectIdentityDeassign-Ack
+--                                   SS-ObjectIdentityCancelGateway
+--                                   SS-ObjectIdentityCancelGateway-Ack
+--                                   SS-ObjectIdentityInterrogate
+--                                   SS-ObjectIdentityInterrogate-Ack
+--                                 New PDU: CC-ForcedCallEnd-Ack
+--                                 ACAPI-CloseService: New result-code "duplicateOpenService". 
+--                                   The new result-code is transmitted when an application opens
+--                                   a service, but the service is already opened
+--                                   for the SSI and service.
+--                                 Additional MonCallStateType (groupCallWithActionFromMember).
+--                                 New optional element callTransfer for the PDUs
+--                                   CC-Setup-Req, CC-Setup-Ack, CC-Disconnect, CC-Disconnect-Ack
+--                                   The element callTransfer is used to indicate that
+--                                   the application only switches a call, but does not
+--                                   take part in it.
+--                                 New element ambienceListening in CC-Setup-Req, CC-Connect-Req
+--                                 New element airEncryption in CC-Setup-Ind and CC-Connect-Ind (only for indication)
+--                                 New element in CC-Disconnect: affectedParty (Fix fÅr D02924)
+--                                 New elements in CC-Setup-Ind: calledExtSbscNo, callingExtSbscNo 
+--                                   (if call*Party=Gateway-SSI, fix for D02911)
+--                                 New elements in CC-Setup-Ind: originalCalledParty (needed for VoiceMailSystem)
+--                                 New element in CC-Information: alertedParty
+--                                 New element in CC-Disconnect: ssAbortCause
+--                                 New result value in SS-GroupAttach-Ack: alreadyAttached
+--                                   The element is used to indicate duplicate group attachments
+--                                 Additional values in TxPriorityType: extraEmergencyLevel1, extraEmergencyLevel2
+--                                 Additional values in DisconnectType and SS-NotificationType
+--
+-- KV 01.25.02, 2003-11-25, VA-vw: Correct typos in the PDU names for Resource
+--                                 State Monitoring, correct comments for dial-up,
+--                                 SSIType can be 0..16777215, rename deaktivResource
+--                                 to inactiveResource in DisconnectType.
+-- KV 01.25.01, 2003-09-09, VA-ul: Additional disconnect causes (Cell Re-selection,
+--                                 Call Setup Repetition)
+-- KV 01.25.00, 2003-08-12, VA-vk: New version numbering scheme: This version KV 01.25.00
+--                                 belongs to ACAPI version 1.25. Corrected spelling errors.
+-- Version 0.23 2003-07-08, CY-fg: New result-code "duplicateOpenService" for the
+--                                 ACAPI-CloseService PDU. The new result-code
+--                                 is transmitted when an application opens
+--                                 a service, but the service is already opened
+--                                 for the SSI and service.
+-- Version 0.22 2003-07-07, VA-vk: Rename PDUs to unify the naming convention
+--                                 (Add dash before the Ack in "SS-DynGroupAssign-Ack"
+--                                 and "SS-DynGroupDeassign-Ack"). In SS-DynGroupAdd, the
+--                                 groupAttachmentMode is OPTIONAL now (as it is intended
+--                                 and also documented). Corrected spelling error in
+--                                 SS-DynGroupInterrogate-Ack.
+-- Version 0.21 2003-06-05, CY-pr: PDU CC-ForcedCallEnd in ACAPI-PDU
+-- Version 0.20 2003-06-02, VA-ul: New element noNfLoopBack in CC-TxDemand PDU
+-- Version 0.19 2003-05-19, VA-ul: New PDU ACAPI-Error-Info,
+--                                 additional error conditions for DGNA
+-- Version 0.18 2003-04-17, VA-ul: Supplementary Services for DGNA
+-- Version 0.17 2003-03-27, VA-ul: New Range for ChannelID (1..31), SubChannelID (1..8)
+-- Version 0.16 2003-03-18, VA-ul: New PDU MON-Intercept-Disconnect-Ack
+-- Version 0.15 2003-02-25, VA-ul: Element "BasicService" in MON-CC-Information PDU
+-- Version 0.14 2003-01-23, VA-ul: IMPLICIT TETRA-Address in MON-TxDemand + MON-TxCeased
+--                                 Elements monBeginSSI + monEndSSI in  MON-Close
+-- Version 0.13 2003-01-10, VA-ul: Element LineInfoAck in CC-Information PDU
+--                                 Additional values for LineInfoAck.LineState
+-- Version 0.12 2002-12-03, VA-ul: Elements macFacility in SDS-Data and MON-SDS-Data.
+-- Version 0.11 2002-11-26, VA-ul: DisconnectCause: Resource Faults (16-19) new.
+-- Version 0.10 2002-11-19, VA-ul: "SSI" in element names changed in "Party"
+--                                 Optional element "cellName" in LocationAreaType
+--                                 New Types TetraCallTime and CallSetupTime.
+--                                 CallSetupTime in CC-Setup-Ack + CC-Information
+--                                 callTimeOut in MON-CC-Information
+--                                 New: CC-ForcedCallEnd
+--                                 Data type Integer16 for "sdsHandle"
+--                                 New: "serviceHandle" in ACAPI-Authorization-Req
+--                                 "requestString" OPTIONAL  in ACAPI-Authorization-Req
+--                                 CircuitModeType: Modification in Element Names
+-- Version 0.9  2002-10-29, VA-ul: New type TxPriorityType for Tx Demand Priority.
+-- Version 0.8  2002-10-22, VA-ul: New: ACAPI-Transport + ACAPI-Transport-Ack as independent definition
+-- Version 0.7, 23.09.2002, VA-ul: New: application window size (ApplicationRx/TxMessageID, ServiceRx/TxMessageID),
+--                                      voice resource management from application, resource state monitoring
+-- Version 0.6, 30.08.2002, VA-ul: Authorisation + MON Close modifiziert
+-- Version 0.5, 15.08.2002, VA-ul: Version zur DVers X01 der A-CAPI Schnittstellenbeschreibung
+-- Version 0.4, 12.08.2002, VA-ul: Ergebnisse von internem Reviewmeeting eingearbeitet
+-- Version 0.3, 31.07.2002, VA-ul: receivedMessageID in ACAPI-PDU, Additional PDUs for Monitoring
+-- Version 0.2, 10.07.2002, VA-ul
+
+
+ACAPI DEFINITIONS::= BEGIN -- Accessnet Common Application Programming Interface
+
+
+-- GENERAL PDU FRAMING FOR THE ACAPI PROTOCOL
+-- ==========================================
+
+-- Transport of ACAPI service specific messages
+ACAPI-Transport ::= [APPLICATION 0] IMPLICIT SEQUENCE
+{
+    applTxMessageID    [0] IMPLICIT INTEGER,               -- Unique ID of each TCP message. Initial 0, incremented by 
+                                                           -- the sender of message
+    applRxMessageID    [1] IMPLICIT INTEGER,               -- Confirm that all messages <= applRxMessageID are OK and 
+                                                           -- in correct order
+    priorityFlag       [2] IMPLICIT BOOLEAN OPTIONAL,      -- Request for preferred transport of ACAPI message. 
+                                                           -- Default: False
+    choice CHOICE
+    {
+         name-ACAPI-PDU           ACAPI-PDU,               -- The service specific ACAPI PDU
+         name-ACAPI-Transport-Ack ACAPI-Transport-Ack      -- Keep alive and confirmation message for ACAPI messages
+    }
+}
+
+-- ACAPI service specific message
+ACAPI-PDU ::= [APPLICATION 1] IMPLICIT SEQUENCE
+{
+    serviceHandle      [0] IMPLICIT INTEGER,               -- Handle for each communication instance. Initial 0, set by
+                                                           -- the ACAPI server
+    serviceTxMessageID [1] IMPLICIT INTEGER,               -- Unique ID of each service message. Initial 0, incremented
+                                                           -- by the sender of message
+    serviceRxMessageID [2] IMPLICIT INTEGER,               -- Confirm that all messages <= serviceTxMessageID are OK and
+                                                           -- in correct order
+    priorityFlag       [3] IMPLICIT BOOLEAN OPTIONAL,      -- Request for preferred transport of ACAPI message.
+                                                           -- Default: False
+    choice CHOICE
+    {
+        name-ACAPI-OpenService  ACAPI-OpenService,
+        name-ACAPI-OpenService-Ack  ACAPI-OpenService-Ack,
+        name-ACAPI-CloseService  ACAPI-CloseService,
+        name-ACAPI-CloseService-Ack  ACAPI-CloseService-Ack,
+        name-ACAPI-Authorization-Req  ACAPI-Authorization-Req,
+        name-ACAPI-Authorization  ACAPI-Authorization,
+        name-ACAPI-Message-Ack  ACAPI-Message-Ack,
+        name-ACAPI-Error-Info  ACAPI-Error-Info,
+        name-SDS-Data  SDS-Data,
+        name-SDS-Data-Ack  SDS-Data-Ack,
+        name-CC-Setup-Req  CC-Setup-Req,
+        name-CC-SetupInclude-Req  CC-SetupInclude-Req,
+        name-CC-Setup-Ind  CC-Setup-Ind,
+        name-CC-Setup-Ack  CC-Setup-Ack,
+        name-CC-Information  CC-Information,
+        name-CC-Connect-Req  CC-Connect-Req,
+        name-CC-Connect-Ind  CC-Connect-Ind,
+        name-CC-Connect-Ack  CC-Connect-Ack,
+        name-CC-TxDemand     CC-TxDemand,
+        name-CC-TxGrant      CC-TxGrant,
+        name-CC-TxCeased     CC-TxCeased,
+        name-CC-TxInterrupt  CC-TxInterrupt,
+        name-CC-TxWait-Ind   CC-TxWait-Ind,
+        name-CC-TxWait-Req   CC-TxWait-Req,
+        name-CC-TxWait-Ack   CC-TxWait-Ack,
+        name-CC-TxContinue-Ind  CC-TxContinue-Ind,
+        name-CC-TxContinue-Req  CC-TxContinue-Req,
+        name-CC-TxContinue-Ack  CC-TxContinue-Ack,
+        name-CC-Disconnect      CC-Disconnect,
+        name-CC-Disconnect-Ack  CC-Disconnect-Ack,
+        name-CC-DialupLine-Info CC-DialupLine-Info,
+        name-CC-ForcedCallEnd   CC-ForcedCallEnd,
+        name-CC-ForcedCallEnd-Ack  CC-ForcedCallEnd-Ack,
+        name-CC-CancelInclude   CC-CancelInclude,
+        name-SS-GroupAttach     SS-GroupAttach,
+        name-SS-GroupAttach-Ack SS-GroupAttach-Ack,
+        name-SS-GroupDetach     SS-GroupDetach,
+        name-SS-GroupDetach-Ack SS-GroupDetach-Ack,
+        name-SS-DynGroupAdd     SS-DynGroupAdd,
+        name-SS-DynGroupDel     SS-DynGroupDel,
+        name-SS-DynGroupAdd-Ack SS-DynGroupAdd-Ack,
+        name-SS-DynGroupDel-Ack SS-DynGroupDel-Ack,
+        name-SS-DynGroupInterrogate  SS-DynGroupInterrogate,
+        name-SS-DynGroupInterrogate-Ack    SS-DynGroupInterrogate-Ack,
+        name-SS-DynGroupAssign             SS-DynGroupAssign,
+        name-SS-DynGroupAssign-Ack         SS-DynGroupAssign-Ack,
+        name-SS-DynGroupDeassign           SS-DynGroupDeassign,
+        name-SS-DynGroupDeassign-Ack       SS-DynGroupDeassign-Ack,
+        name-SS-CallForwardActivate        SS-CallForwardActivate,
+        name-SS-CallForwardActivate-Ack    SS-CallForwardActivate-Ack,
+        name-SS-CallForwardDeactivate      SS-CallForwardDeactivate,
+        name-SS-CallForwardDeactivate-Ack  SS-CallForwardDeactivate-Ack,
+        name-SS-CallForwardCancelAll       SS-CallForwardCancelAll,
+        name-SS-CallForwardCancel-Ack      SS-CallForwardCancel-Ack,
+        name-SS-CallForwardInterrogate     SS-CallForwardInterrogate,
+        name-SS-CallForwardInterrogate-Ack SS-CallForwardInterrogate-Ack,
+        name-SS-ObjectIdentityAssign       SS-ObjectIdentityAssign,
+        name-SS-ObjectIdentityAssign-Ack   SS-ObjectIdentityAssign-Ack,
+        name-SS-ObjectIdentityDeassign     SS-ObjectIdentityDeassign,
+        name-SS-ObjectIdentityDeassign-Ack SS-ObjectIdentityDeassign-Ack,
+        name-SS-ObjectIdentityCancelGateway  SS-ObjectIdentityCancelGateway,
+        name-SS-ObjectIdentityCancelGateway-Ack  SS-ObjectIdentityCancelGateway-Ack,
+        name-SS-ObjectIdentityInterrogate  SS-ObjectIdentityInterrogate,
+        name-SS-ObjectIdentityInterrogate-Ack  SS-ObjectIdentityInterrogate-Ack,
+        name-MON-Monitoring-Req            MON-Monitoring-Req,
+        name-MON-Monitoring-Ack            MON-Monitoring-Ack,
+        name-MON-FleetMonitoring-Req       MON-FleetMonitoring-Req,
+        name-MON-FleetMonitoring-Ack       MON-FleetMonitoring-Ack,
+        name-MON-Data-Ack                  MON-Data-Ack,
+        name-MON-Close                     MON-Close,
+        name-MON-Close-Ack                 MON-Close-Ack,
+        name-MON-LocationUpdate            MON-LocationUpdate,
+        name-MON-LocationDetach            MON-LocationDetach,
+        name-MON-SDS-Data                  MON-SDS-Data,
+        name-MON-SDS-Ack                   MON-SDS-Ack,
+        name-MON-CC-Information            MON-CC-Information,
+        name-MON-TxDemand                  MON-TxDemand,
+        name-MON-TxCeased                  MON-TxCeased,
+        name-MON-TxGrant                   MON-TxGrant,
+        name-MON-Disconnect                MON-Disconnect,
+        name-MON-Intercept-Req             MON-Intercept-Req,
+        name-MON-Intercept-Ack             MON-Intercept-Ack,
+        name-MON-Intercept-Connect         MON-Intercept-Connect,
+        name-MON-Intercept-Disconnect      MON-Intercept-Disconnect,
+        name-MON-Intercept-Disconnect-Ack  MON-Intercept-Disconnect-Ack,
+        name-MON-ForcedCallEnd             MON-ForcedCallEnd,
+        name-MON-ForcedCallEnd-Ack         MON-ForcedCallEnd-Ack,
+        name-MON-Uplink-TxDemand           MON-Uplink-TxDemand,
+        name-MON-Uplink-TxCeased           MON-Uplink-TxCeased,
+        name-MON-TxInterrupt               MON-TxInterrupt,
+        name-RSM-ResourceMonitoring-Req    RSM-ResourceMonitoring-Req,
+        name-RSM-ResourceState-Ind         RSM-ResourceState-Ind,
+        name-RSM-ResourceMonitoring-Close  RSM-ResourceMonitoring-Close
+    }
+}
+
+
+-- Keep alive and confirmation message for ACAPI Transport messages.
+-- Sent after a 10s timeout (default value) or after receiving WindowSize messages.
+ACAPI-Transport-Ack ::= [APPLICATION 2] IMPLICIT SEQUENCE
+{
+    timeStamp          [0] IMPLICIT GeneralizedTime        -- Time stamp of this incident
+}
+
+
+-- GENERAL ACAPI SERVICE COMMANDS
+-- ==============================
+
+-- The ACAPI application sends a request for a new communication service for a specific
+-- TETRA ident (SSI) and a specific service.
+ACAPI-OpenService ::= [APPLICATION 10] IMPLICIT SEQUENCE
+{
+    loginName          [0] IMPLICIT OCTET STRING (SIZE(0..32)), -- Login name of the ACAPI application
+    version            [1] IMPLICIT Integer16,                  -- Value for version arrangements, may be different
+                                                                -- for each service
+    serviceReq         [2] IMPLICIT ServiceIDType,              -- Ident for the selected ACAPI service type
+    ssiReq             [3] IMPLICIT TETRA-Address,              -- Virtual TETRA ident (SSI) of the ACAPI application
+    lineResourceInfo   [4] IMPLICIT SEQUENCE OF LineResourceInfo OPTIONAL -- Leased- or dialup-lines for CC or MON.
+                                                                          -- Note that all items in the sequence must
+                                                                          -- represent resources in the same switch.
+}
+
+-- Response of ACAPI server to an ACAPI-OpenService from an ACAPI application.
+-- There is an authentication procedure before the OpenService is accepted.
+ACAPI-OpenService-Ack ::= [APPLICATION 11] IMPLICIT SEQUENCE
+{
+    version            [0] IMPLICIT Integer16,             -- Value for version arrangements
+    serviceResp        [1] IMPLICIT ServiceIDType,         -- Ident for the selected ACAPI service type
+    ssiResp            [2] IMPLICIT TETRA-Address,         -- Virtual TETRA ident (SSI) of the ACAPI application
+    serviceHandle      [3] IMPLICIT INTEGER,               -- Handle for communication service
+    applWindowSize     [4] IMPLICIT Integer16,             -- For communication service, application specific
+    serviceWindowSize  [5] IMPLICIT Integer16              -- For communication service, service specific
+}
+
+-- Request to close a communication service from ACAPI application (if result="closeRequest"),
+-- or indication to close a communication service from ACAPI server (for all other result codes)
+ACAPI-CloseService ::= [APPLICATION 12] IMPLICIT SEQUENCE
+{
+    result             [0] IMPLICIT INTEGER                  -- Reason for the CloseService
+                           {
+                              closeRequest               (0),   -- From ACAPI application
+                              serviceUnknown             (1),   -- This service is not available for this SSI
+                              serviceDenied              (2),
+                              subscriberUnknown          (3),
+                              subscriberError            (4),
+                              accessDenied               (5),
+                              versionMissmatch           (6),
+                              timedOut                   (7),
+                              overLoad                   (8),
+                              serviceBreakdown           (9),
+                              parameterError             (10),
+                              noConnectionToSwMI         (11),  -- The TAP has no connection to the SwMI
+
+                              asn1Error                  (12),
+                              applTxMessageIDInvalid     (13),
+                              serviceTxMessageIDInvalid  (14),
+                              lineResourceInvalid        (15),
+                              lineResourceNotAvail       (16),
+                              duplicateOpenService       (17),  -- OpenService from another application for the same SSI
+                                                                -- and service. The old login is closed with this result.
+                              applicationConnectionLoss  (18),  -- The connection to the application was interrupted
+                              mismatchPduAndService      (19)   -- PDU not allowed to be sent on that type of service
+                           },
+    serviceReq         [1] IMPLICIT ServiceIDType OPTIONAL,  -- Requested ACAPI service type 
+                                                             -- (mandatory if ServiceHandle = 0)
+    ssiReq             [2] IMPLICIT TETRA-Address OPTIONAL   -- Requested TETRA ident (SSI) 
+                                                             -- (mandatory if ServiceHandle = 0)
+}
+
+-- Response to ACAPI-CloseService
+ACAPI-CloseService-Ack ::= [APPLICATION 13] IMPLICIT SEQUENCE
+{
+    result             [0] IMPLICIT INTEGER
+                           {
+                              logoutAccepted         (0),
+                              parameterError         (1)
+                           }
+}
+
+-- Authentication request from ACAPI server or application (if an application wants to authenticate the ACAPI server).
+-- The Authentication is required for every communication setup.
+ACAPI-Authorization-Req ::= [APPLICATION 14] IMPLICIT SEQUENCE
+{
+    loginName           [0] IMPLICIT OCTET STRING (SIZE(0..32)),  -- Login name of the ACAPI application
+    serviceReq          [1] IMPLICIT ServiceIDType,               -- Ident for the selected ACAPI service type
+    ssiReq              [2] IMPLICIT TETRA-Address,               -- Virtual TETRA ident (SSI) of the ACAPI application
+    serviceHandle       [4] IMPLICIT INTEGER,                     -- Handle for the communication service
+    authorizationMethod [5] IMPLICIT AuthorizationMethodType,     -- Plain text / Secure Hash Algorithm / TETRA
+    requestString       [6] IMPLICIT OCTET STRING (SIZE(0..255)) OPTIONAL,-- Random string (empty for plain text authoriz.)
+    randomSeed          [7] IMPLICIT OCTET STRING (SIZE(0..255)) OPTIONAL -- Random value to generate a session key (TETRA)
+}
+
+-- Authentication response
+ACAPI-Authorization ::= [APPLICATION 15] IMPLICIT  SEQUENCE
+{
+    loginName           [0] IMPLICIT OCTET STRING (SIZE(0..32)),  -- Login name of the ACAPI application
+    serviceReq          [1] IMPLICIT ServiceIDType,               -- Ident for the selected ACAPI service type
+    ssiReq              [2] IMPLICIT TETRA-Address,               -- Virtual TETRA ident (SSI) of the ACAPI application
+    authorizationMethod [3] IMPLICIT AuthorizationMethodType,     -- Plain text / Secure Hash Algorithm / TETRA
+    authorizationString [4] IMPLICIT OCTET STRING (SIZE(0..255)), -- Plain: password, sha: hash (ramdom string+password)
+    randomSeed          [5] IMPLICIT OCTET STRING (SIZE(0..255)) OPTIONAL -- Random value to generate a session key (TETRA)
+}
+
+-- Keep alive and confirmation message for ACAPI messages.
+-- Sent after a 5s timeout (default value) or after receiving WindowSize messages.
+ACAPI-Message-Ack ::= [APPLICATION 16] IMPLICIT SEQUENCE
+{
+    timeStamp          [0] IMPLICIT GeneralizedTime                -- Time stamp of this incident
+}
+
+-- Protocol element for generic error messages between ACAPI server and ACAPI application
+ACAPI-Error-Info ::= [APPLICATION 17] IMPLICIT SEQUENCE
+{
+    errorText          [0] IMPLICIT OCTET STRING (SIZE(0..255)),   -- Text message
+    timeStamp          [1] IMPLICIT GeneralizedTime,               -- Time stamp of this incident
+    affectedSSI        [2] IMPLICIT TETRA-Address OPTIONAL,        -- TETRA address (individual or group)
+    callID             [3] IMPLICIT INTEGER OPTIONAL               -- Unique ID of the call
+}
+
+
+-- SHORT DATA SERVICE
+-- ==================
+
+-- Send and receive SDS-Data (valid for both directions)
+SDS-Data  ::= [APPLICATION 20] IMPLICIT SEQUENCE
+{
+    calledParty        [0] AddressType,                    -- Target address (individual or group)
+    callingParty       [1] AddressType,                    -- Source address (individual)
+    sdsHandle          [2] IMPLICIT Integer16,             -- (0x0000-0xFFFF) Unique ID, created by sender of the SDS.
+                                                           -- In SDS messages sent by ACAPI application, most significant
+                                                           -- bit must be set to zero (sdsHandle in 0x0000-0x7FFF).
+    sdsData            [3] SDSDataType,                    -- SDS-Data
+    areaSelection      [4] IMPLICIT AreaType OPTIONAL,     -- Area Selection for target mobiles (only in group-mode)
+    priorityClass      [5] IMPLICIT PriorityType OPTIONAL, -- Priority for transport/queuing messages in TETRA system
+    acknowlegeExpected [6] IMPLICIT BOOLEAN OPTIONAL,      -- Request for receipt. Default: False
+    sourceLocation     [7] IMPLICIT LocationAreaType OPTIONAL, -- Only from ACAPI server, for emergency sds messages
+    macFacility        [8] IMPLICIT MacFacilityType OPTIONAL   -- Information about uplink RSSI and path delay
+}
+
+-- SDS-Data Acknowledge, response to SDS-Data if acknowledge expected was True
+SDS-Data-Ack  ::= [APPLICATION 21] IMPLICIT SEQUENCE
+{
+    calledParty        [0] AddressType,                    -- Target address (individual or group) of the original SDS
+    callingParty       [1] AddressType,                    -- Source address (individual) of the original SDS
+    sdsHandle          [2] IMPLICIT Integer16,             -- (0x0000-0xFFFF) Unique ID, created by sender of the SDS
+    result             [3] IMPLICIT INTEGER
+                           {
+                              sdsTransferOK           (0),
+                              sdsTransferFailed       (1),
+                              subscriberError         (2),
+                              subscriberOffline       (3),
+                              subscriberQueueOverload (4)
+                           },
+    isStatus           [4] IMPLICIT BOOLEAN OPTIONAL 	   -- (V5/not implemented) This PDU acknowledges a status message
+                                                           -- Currently status messages cannot be acknowledged by the
+                                                           -- application.
+                                                           -- Default value: This PDU acknowledges a SDS-Data message
+}
+
+
+-- CALL CONTROL
+-- ===========
+
+-- Call Control Setup Request from ACAPI application to ACAPI server
+CC-Setup-Req ::= [APPLICATION 30] IMPLICIT SEQUENCE
+{
+    calledParty        [0] AddressType,                    -- Target address (individual or group)
+    callingParty       [1] IMPLICIT TETRA-Address,         -- Source address (individual)
+    hookSignalling     [2] IMPLICIT BOOLEAN,               -- False = No hook signalling, True = Hook signalling
+    duplexRequest      [3] IMPLICIT BOOLEAN,               -- Simplex requested / Duplex requested
+    lineInformation    [4] LineInformationType,            -- Indicates the type, channel or handle of an audio line
+    requestToTransmit  [5] IMPLICIT BOOLEAN OPTIONAL,      -- Request for transmission (PTT)
+                                                           -- Default value is False if hookSignalling=True
+                                                           -- Default value is True  if hookSignalling=False
+    cliControl         [6] IMPLICIT CliType OPTIONAL,      -- Calling party identification restriction.
+    areaSelection      [7] IMPLICIT AreaType OPTIONAL,     -- Area Selection for target mobiles (only in group-mode)
+    priorityClass      [8] IMPLICIT PriorityType OPTIONAL, -- Priority for transport/queuing messages in TETRA system
+    callPriority       [9] IMPLICIT CallPriorityType OPTIONAL,  -- Call priority
+    basicService       [10] IMPLICIT BasicServiceType OPTIONAL, -- Point2point, Point2multipoint, encryption, speech
+                                                                -- Default: Point2point, no encryption, TETRA speech
+    callTransfer       [11] IMPLICIT CallTransferType OPTIONAL, -- Address of the application that requested the
+                                                                -- call transfer
+    ambienceListening  [12] IMPLICIT BOOLEAN OPTIONAL      -- Request for an Ambience Listening Call (Default: False)
+}
+
+-- Setup Request for an Include Call from ACAPI application to ACAPI server
+CC-SetupInclude-Req ::= [APPLICATION 120] IMPLICIT SEQUENCE
+{
+    includeParty       [0] AddressType,                    -- Target address (individual or group)
+    callingParty       [1] IMPLICIT TETRA-Address,         -- Source address (individual)
+    hookSignalling     [2] IMPLICIT BOOLEAN,               -- False = No hook signalling, True = Hook signalling
+    include2CallID     [3] IMPLICIT INTEGER,               -- Include Call: Call ID of basic call
+    cliControl         [4] IMPLICIT CliType OPTIONAL,      -- Calling party identification restriction
+    divertCall         [5] IMPLICIT BOOLEAN OPTIONAL       -- Diverted Call: Calling party will leave immediately
+                                                           -- after connect. Default: False
+}
+
+-- Call Control Setup Indication from ACAPI server to ACAPI application
+CC-Setup-Ind ::= [APPLICATION 31] IMPLICIT SEQUENCE
+{
+    calledParty        [0] IMPLICIT TETRA-Address,         -- Target address (individual or group)
+    callingParty       [1] AddressType,                    -- Source address (individual).
+                                                           -- 0: The source address is not displayed (cliControl)
+                                                           -- If cliControl=presentationRestricted
+    callID             [2] IMPLICIT INTEGER,               -- Unique ID of the call, will be set by DMX, init = 0xFFFF
+    hookSignalling     [3] IMPLICIT BOOLEAN,               -- False = No hook signalling, True = Hook signalling
+    duplexRequest      [4] IMPLICIT BOOLEAN,               -- Simplex requested / Duplex requested
+    callTimeOut        [5] IMPLICIT TetraCallTime,         -- Predefined values for max. call time, 0=infinite (default)
+    txGrant            [6] IMPLICIT TxGrantType OPTIONAL,  -- Information about the permission to transmit
+    txReqPermission    [7] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    cliControl         [8] IMPLICIT CliType OPTIONAL,      -- Calling party identification restriction
+    callPriority       [9] IMPLICIT CallPriorityType OPTIONAL,     -- Call priority
+    basicService       [10] IMPLICIT BasicServiceType OPTIONAL,    -- Point2point, Point2multipoint, encryption, speech
+    sourceLocation     [11] IMPLICIT LocationAreaType OPTIONAL,    -- Only for emergency priotity call setup
+    ssNotification     [12] IMPLICIT SS-NotificationType OPTIONAL, -- Notification indicator for supplementary services
+    temporarySSI       [13] IMPLICIT TETRA-Address OPTIONAL,       -- May be used in include calls
+    airEncryption      [14] IMPLICIT AirEncryptionType OPTIONAL,   -- Clear Mode (default) / Encrypted Mode
+--
+--     The elements [15] and [16] used to be assigned erroneously to the (not needed and never supported)
+--     elements calledExtSbscNo and callingExtSbscNo which had been removed
+--
+    originalCalledParty  [17] AddressType OPTIONAL,        -- Number of the originally called subscriber
+                                                           -- (scenario Call Authorization by Dispatcher)
+    callForwardingReason [18] IMPLICIT CallForwardingReasonType OPTIONAL,  -- (V5) Reason why the call was forwarded
+    authorizationReq     [19] IMPLICIT BOOLEAN OPTIONAL    -- (V5) Request for Call Authorization.
+                                                           -- Default value: False
+}
+
+-- Call Control Setup Acknowledge, response to CC-Setup-Req, CC-SetupInclude-Req and CC-Setup-Ind
+CC-Setup-Ack ::= [APPLICATION 32] IMPLICIT SEQUENCE
+{
+    calledParty        [0] AddressType,                    -- Target address (individual or group)
+    callingParty       [1] AddressType,                    -- Source address (individual)
+    callID             [2] IMPLICIT INTEGER,               -- Unique ID of the call, will be set by DMX, init = 0xFFFF
+    hookSignalling     [3] IMPLICIT BOOLEAN OPTIONAL,      -- False = No hook signalling, True = Hook signalling
+    duplexMode         [4] IMPLICIT BOOLEAN OPTIONAL,      -- False = Semi-Duplex, True = Duplex requested
+    basicService       [5] IMPLICIT BasicServiceType OPTIONAL, -- Point2point, Point2multipoint, encryption, speech
+    callSetupTime      [6] IMPLICIT CallSetupTime OPTIONAL,    -- Predefined values for maximal call setup time,
+                                                               -- 0=predefined value (default)
+    callTransfer       [7] IMPLICIT CallTransferType OPTIONAL, -- Address of the application that requested the
+                                                               -- call transfer
+    authorizationReq   [8] IMPLICIT BOOLEAN OPTIONAL       -- (V5) Request for Call Authorization.
+                                                           -- Default value: False
+
+}
+
+-- Information from ACAPI server to the ACAPI application about the state of the call and other information.
+-- In rare cases sent from ACAPI application to ACAPI server: 
+--   DTMF signalling, indication that a call is of queued, re-triggering of call setup time.
+CC-Information ::= [APPLICATION 33] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,               -- Target address (individual or group)
+    callID             [1] IMPLICIT INTEGER,                     -- Unique ID of the call
+    callState          [2] IMPLICIT CallStateType OPTIONAL,      -- Progressing, callQueued, subscriberPaged, ringing, ...
+    duplexMode         [3] IMPLICIT BOOLEAN OPTIONAL,            -- False = Semi-Duplex, True = Duplex requested
+    basicService       [4] IMPLICIT BasicServiceType OPTIONAL,   -- Point2point, Point2multipoint, encryption, speech
+    ssNotification     [5] IMPLICIT SS-NotificationType OPTIONAL,-- Notification indicator for supplementary services
+    temporarySSI       [6] IMPLICIT TETRA-Address OPTIONAL,      -- May be used in include calls
+    pollRequest        [7] IMPLICIT BOOLEAN OPTIONAL,            -- Only in acked group call: Poll answer requested = True
+    pollRespNumber     [8] IMPLICIT INTEGER (0..63) OPTIONAL,    -- Acked group call: number of responding group members
+    pollRespPercent    [9] IMPLICIT INTEGER (0..100) OPTIONAL,   -- Acked group call: percentage of responding members
+    pollRespAddresses  [10]IMPLICIT SEQUENCE SIZE(0..63) OF TETRA-Address OPTIONAL, -- Addresses of group members
+    dTMF               [11]IMPLICIT DTMFString OPTIONAL,         -- Signalling of DTMF
+    callSetupTime      [12] IMPLICIT CallSetupTime OPTIONAL,     -- Predefined values for maximal call setup time,
+                                                                 -- 0=predefined value (default)
+    lineInformation    [13] IMPLICIT LineInfoAckType OPTIONAL,   -- Identification and state of the line resource
+    alertedParty       [14] AddressType OPTIONAL,                -- Address of alerted party (in case of call forwarding)
+    dtmfErrorCode      [15] IMPLICIT INTEGER                     -- (V6) OPTIONAL
+                            {                                    -- COS:
+                              dtmfNotSupported       (0),        --  2: DTMF digits are not supported
+                              dtmfNotSubscribed      (1),        --  3: DTMF not subscribed
+                              dtmfInvalidCharacter   (2)         -- ne: DTMF character is out of the valid range
+                            } OPTIONAL
+}
+
+-- Request to connect the call, sent from ACAPI application to ACAPI server. 2nd response to CC-Setup-Ind
+CC-Connect-Req ::= [APPLICATION 34] IMPLICIT SEQUENCE
+{
+    callParty          [0] AddressType,                    -- Target address (individual or group)
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    lineInformation    [2] LineInformationType,            -- Indicates the type, channel or number of an audio line
+    duplexMode         [3] IMPLICIT BOOLEAN OPTIONAL,      -- False = Semi-Duplex, True = Duplex requested
+                                                           -- (only when different to CC-Setup-Ind)
+    basicService       [4] IMPLICIT BasicServiceType OPTIONAL,  -- Point2point, Point2multipoint, encryption, speech
+                                                                -- (only when different to CC-Setup-Ind)
+    ambienceListening  [5] IMPLICIT BOOLEAN OPTIONAL       -- The call is an Ambience Listening Call (Default: False)
+}
+
+-- Indication that the call is connected, sent from ACAPI server to ACAPI application. 2nd response to CC-Setup-Req
+CC-Connect-Ind ::= [APPLICATION 35] IMPLICIT SEQUENCE
+{
+    callParty          [0] AddressType,                    -- Target address (individual or group)
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    hookSignalling     [2] IMPLICIT BOOLEAN,               -- False = No hook signalling, True = Hook signalling
+    duplexMode         [3] IMPLICIT BOOLEAN,               -- False = Semi-Duplex, True = Duplex requested
+    txGrant            [4] IMPLICIT TxGrantType,           -- Information about the permission to transmit
+    lineInfoAck        [5] IMPLICIT LineInfoAckType,       -- Identification and state of the line resource
+    txReqPermission    [6] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    callPriority       [7] IMPLICIT CallPriorityType OPTIONAL,    -- Call priority
+    basicService       [8] IMPLICIT BasicServiceType OPTIONAL,    -- Point2point, Point2multipoint, encryption, speech
+    ssNotification     [9] IMPLICIT SS-NotificationType OPTIONAL, -- Notification indicator for supplementary services
+    connectedParty     [10] AddressType OPTIONAL,                 -- Connected address, in case of call forwarding
+    airEncryption      [11] IMPLICIT AirEncryptionType OPTIONAL,  -- Clear Mode (default) / Encrypted Mode
+    callTimeOut        [12] IMPLICIT TetraCallTime OPTIONAL       -- (V5) Predefined values for maximal call time, 
+                                                                  -- 0=infinite (default)
+}
+
+-- From ACAPI application to ACAPI server as response to CC-Connect-Ind.
+-- From ACAPI server to ACAPI application as response to CC-Connect-Req.
+-- Note that in the later case to call is only set up successfully if lineInfoAck==lineConnected (!)
+CC-Connect-Ack ::= [APPLICATION 36] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Target address (individual or group)
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    txGrant            [2] IMPLICIT TxGrantType,           -- Information about the permission to transmit
+    lineInfoAck        [3] IMPLICIT LineInfoAckType,       -- Identification and state of the line resource
+    txReqPermission    [4] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    callPriority       [5] IMPLICIT CallPriorityType OPTIONAL,    -- Call priority
+    ssNotification     [6] IMPLICIT SS-NotificationType OPTIONAL, -- Notification indicator for supplementary services
+    callTimeOut        [7] IMPLICIT TetraCallTime OPTIONAL        -- (V5) Predefined values for maximal call time, 
+                                                                  -- 0=infinite (default)
+}
+
+
+-- Request to transmit, sent from ACAPI application to ACAPI server.
+CC-TxDemand ::= [APPLICATION 37] IMPLICIT SEQUENCE
+{
+    demandPartySSI     [0] IMPLICIT TETRA-Address,         -- Address of demanding subscriber
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    txPriority         [2] IMPLICIT TxPriorityType OPTIONAL, -- Priority of this request
+    encryption         [3] IMPLICIT BOOLEAN OPTIONAL,      -- False: Clear Mode (default)
+                                                           -- True: TETRA End-to-End encryption
+    lineInformation    [4] LineInformationType OPTIONAL,   -- Only in group calls with dyn. line resources
+    noNfLoopBack       [5] IMPLICIT BOOLEAN OPTIONAL       -- False: NF will be looped back on voice channel
+                                                           -- Default: False
+}
+
+-- Response to CC-TxDemand or to indicate the speaker in a call, sent from ACAPI server to ACAPI application.
+CC-TxGrant ::= [APPLICATION 38] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Target address (individual or group)
+    transmittingParty  [1] AddressType,                    -- Address of transmitting subscriber
+    callID             [2] IMPLICIT INTEGER,               -- Unique ID of the call
+    txGrant            [3] IMPLICIT TxGrantType,           -- Information about the permission to transmit
+    txReqPermission    [4] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    encryption         [5] IMPLICIT BOOLEAN OPTIONAL,      -- False: Clear Mode (default)
+                                                           -- True: TETRA End-to-End encryption
+    tpiRestriction     [6] IMPLICIT CliType OPTIONAL,      -- Talking party identification restriction
+    ssNotification     [7] IMPLICIT SS-NotificationType OPTIONAL -- Notification Indicator for supplementary services
+}
+
+-- Indication to cease the permission to speak (PTT), if sent from ACAPI application to ACAPI server. ("PTT off")
+-- Indication that the permission to speak (PTT) is assigned to nobody, if sent from ACAPI server to ACAPI application.
+CC-TxCeased ::= [APPLICATION 39] IMPLICIT SEQUENCE
+{
+    callParty          [0] AddressType,                    -- Target address (individual or group)
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    txReqPermission    [2] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    ssNotification     [3] IMPLICIT SS-NotificationType OPTIONAL -- Notification Indicator for supplementary services
+}
+
+-- Indication that the permission to speak (PTT) was withdrawn by the system (in case of CC-TxDemand priority),
+-- sent from ACAPI server to ACAPI application.
+CC-TxInterrupt ::= [APPLICATION 40] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Target address (individual or group)
+    transmittingParty  [1] AddressType,                    -- Address of transmitting subscriber
+    callID             [2] IMPLICIT INTEGER,               -- Unique ID of the call
+    txGrant            [3] IMPLICIT TxGrantType,           -- Information about the permission to transmit
+    txReqPermission    [4] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    encryption         [5] IMPLICIT BOOLEAN OPTIONAL,      -- False: Clear Mode (default)
+                                                           -- True: TETRA End-to-End encryption
+    tpiRestriction     [6] IMPLICIT CliType OPTIONAL       -- Talking party identification restriction
+}
+
+-- Indication of a Tx wait by the system (in case of include call).
+-- Sent from ACAPI server to ACAPI application.
+CC-TxWait-Ind ::= [APPLICATION 45] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Address of subscriber who shall wait
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    txReqPermission    [2] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    ssNotification     [3] IMPLICIT SS-NotificationType OPTIONAL  -- Notification Indicator for supplementary services
+}
+
+-- Request for a Tx wait for another call party (e.g. in case of include call).
+-- Sent from ACAPI application to ACAPI server.
+CC-TxWait-Req ::= [APPLICATION 46] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Address of subscriber who requests the wait
+    otherParty         [1] AddressType,                    -- Address of subscriber who shall wait
+                                                           -- 0 to request waiting of all other call parties
+    callID             [2] IMPLICIT INTEGER                -- Unique ID of the call
+}
+
+-- Response to CC-TxWait-Req or CC-TxWait-Ind
+CC-TxWait-Ack ::= [APPLICATION 47] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Address of subscriber who requests the wait
+    otherParty         [1] AddressType,                    -- Address of subscriber who shall wait
+    callID             [2] IMPLICIT INTEGER,               -- Unique ID of the call
+    result             [3] IMPLICIT INTEGER
+                           {
+                              txWaitOK               (0),
+                              txWaitFailed           (1),
+                              invalidCallID          (2),
+                              subcriberError         (3)
+                           }
+}
+
+-- Indication of a Tx continue by the system (in case of include call).
+-- Sent from ACAPI server to ACAPI application.
+CC-TxContinue-Ind ::= [APPLICATION 122] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Address of subscriber who shall continue
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    txReqPermission    [2] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    ssNotification     [3] IMPLICIT SS-NotificationType OPTIONAL -- Notification Indicator for supplementary services
+}
+
+-- Request for a Tx continue for another call party (e.g. in case of include call).
+-- Sent from ACAPI application to ACAPI server.
+CC-TxContinue-Req ::= [APPLICATION 48] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Address of subscriber who requests the continue
+    otherParty         [1] AddressType,                    -- Address of subscriber who shall continue
+                                                           -- Use the SSI=0 for all waiting parties
+    callID             [2] IMPLICIT INTEGER                -- Unique ID of the call
+}
+
+-- Response to CC-TxContinue-Req or CC-TxContinue-Ind
+CC-TxContinue-Ack ::= [APPLICATION 49] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Address of subscriber who requests the continue
+    otherParty         [1] AddressType,                    -- Address of subscriber who shall continue
+    callID             [2] IMPLICIT INTEGER,               -- Unique ID of the call
+    result             [3] IMPLICIT INTEGER
+                           {
+                              txContinueOK           (0),
+                              txContinueFailed       (1),
+                              invalidCallID          (2),
+                              subcriberError         (3)
+                           }
+}
+
+-- Cancel an initiated include process, sent from ACAPI application to ACAPI server.
+CC-CancelInclude ::= [APPLICATION 121] IMPLICIT SEQUENCE
+{
+    includeParty       [0] AddressType,                    -- Target address (individual)
+    callingParty       [1] IMPLICIT TETRA-Address,         -- Source address (individual)
+    include2CallID     [2] IMPLICIT INTEGER                -- Include Call: Call ID of basic call
+}
+
+-- Disconnect / Release of a call. Initiated by ACAPI application or external subscriber.
+CC-Disconnect ::= [APPLICATION 41] IMPLICIT SEQUENCE
+{
+    callParty            [0] AddressType,                  -- Target address (individual or group)
+    callID               [1] IMPLICIT INTEGER,             -- Unique ID of the call
+    disconnectCause      [2] IMPLICIT DisconnectType,      -- Reason for the call end.
+                                                           -- If sent from application: userRequestedDisconnect (1)
+    ssNotification       [3] IMPLICIT SS-NotificationType OPTIONAL, -- Notification Indicator for supplementary services
+    callTransfer         [4] IMPLICIT CallTransferType OPTIONAL,    -- Address of the application that requested the
+                                                                    -- call transfer
+    ssAbortCause         [5] SS-AbortCauseType OPTIONAL,   -- If a call related Supplementary Service is not successful
+    affectedParty        [6] AddressType OPTIONAL,         -- Number of affected subscriber (i.e. in Include Calls)
+    authorizationGranted [7] IMPLICIT BOOLEAN OPTIONAL     -- (V5) The Call Authorization is granted
+}
+
+-- Response to CC-Disconnect
+CC-Disconnect-Ack ::= [APPLICATION 42] IMPLICIT SEQUENCE
+{
+    callParty          [0] AddressType,                    -- Target address (individual or group)
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    disconnectCause    [2] IMPLICIT DisconnectType,        -- Reason for the call end
+    callTransfer       [3] IMPLICIT CallTransferType OPTIONAL  -- Address of the application that requested
+                                                               -- the call transfer
+}
+
+-- Call Control Dialup Information from A-CAPI server to application
+CC-DialupLine-Info ::= [APPLICATION 43] IMPLICIT SEQUENCE
+{
+    dialupLineInfo     [0] IMPLICIT DialupLineType,        -- Dialup line channel and CLI
+    dialupLineHandle   [1] IMPLICIT INTEGER,               -- Handle for dialup line
+    dialupLineState    [2] IMPLICIT INTEGER                -- State of the dialup line
+                           {
+                              lineEstablished        (0),
+                              lineReleased           (1),
+                              lineInfoInvalid        (2),
+                              parameterError         (3)
+                           }
+}
+
+-- Forced Call End for an existing group call, where the application is not the call owner.
+CC-ForcedCallEnd ::= [APPLICATION 44] IMPLICIT SEQUENCE
+{
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    disconnectCause    [2] IMPLICIT DisconnectType         -- Reason for the call end
+}
+
+-- Response to message CC-ForcedCallEnd
+CC-ForcedCallEnd-Ack ::= [APPLICATION 123] IMPLICIT SEQUENCE
+{
+    callID             [0] IMPLICIT INTEGER,               -- Unique ID of the call
+    result             [1] IMPLICIT INTEGER
+                           {
+                              forcedCallEndOK        (0),
+                              failedUnspecified      (1),
+                              deniedNoPermission     (2),
+                              deniedWrongCallID      (3)
+                           }
+}
+
+
+
+-- SUPPLEMENTARY SERVICES
+-- ======================
+
+-- Request from application to be attached to (get a member of) the TETRA group given.
+SS-GroupAttach ::= [APPLICATION 50] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Application address (individual)
+    groupSSI           [1] IMPLICIT TETRA-Address          -- Valid TETRA group address
+}
+
+-- Response to SS-GroupAttach
+SS-GroupAttach-Ack ::= [APPLICATION 51] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Application address (individual)
+    groupSSI           [1] IMPLICIT TETRA-Address,         -- Valid TETRA group address
+    result             [2] IMPLICIT INTEGER
+                           {
+                              groupAttachOK          (0),  -- Group attach successful or application was already attached
+                              groupAttachDenied      (1),  -- Group attach denied
+                              subscriberError        (2),  -- Group attach denied because the subscriber SSI is invalid
+                              alreadyAttached        (3)   -- Duplicate group attachment, application is already attached
+                           }
+}
+
+-- Request to cease the membership in the TETRA group given, sent from ACAPI application to ACAPI server.
+SS-GroupDetach ::= [APPLICATION 52] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Application address (individual)
+    groupSSI           [1] IMPLICIT TETRA-Address          -- Valid TETRA group address
+}
+
+-- Response to SS-GroupDetach
+SS-GroupDetach-Ack ::= [APPLICATION 53] IMPLICIT SEQUENCE
+{
+    callPartySSI       [0] IMPLICIT TETRA-Address,         -- Application address (individual)
+    groupSSI           [1] IMPLICIT TETRA-Address,         -- Valid TETRA group address
+    result             [2] IMPLICIT INTEGER
+                           {
+                              groupDetachOK          (0),  -- Group detach successful or appl. was not attached before
+                              subscriberError        (1)   -- Group detach denied because the subscriber SSI is invalid
+                           }
+}
+
+-- SUPPLEMENTARY SERVICES for DGNA
+-- ===============================
+
+-- Request for adding one or more subscribers to a dynamic TETRA group.
+-- Sent from ACAPI application to ACAPI server.
+SS-DynGroupAdd ::= [APPLICATION 54] IMPLICIT SEQUENCE
+{
+    dynGroupSSI         [0] IMPLICIT TETRA-Address,        -- Address of the dynamic group
+    affectedSSI         [1] IMPLICIT SEQUENCE SIZE (1..255) OF TETRA-Address,   -- Individual SSIs to be added
+    groupAttachmentMode [2] IMPLICIT INTEGER 	           -- OPTIONAL
+                            {
+                               notAttached           (0),
+                               attached              (1)   -- (default)
+                            } OPTIONAL,
+    mnemonicGroupName   [3] IMPLICIT OCTET STRING (SIZE(1..15)) OPTIONAL,   -- Mnemonic group name to be displayed
+    classOfUsage        [4] IMPLICIT INTEGER               -- (OPTIONAL)
+                            {
+                               classOfUsage1         (1),  -- Reserved
+                               classOfUsage2         (2),  -- Not scanned
+                               classOfUsage3         (3),  -- Scanned, low priority
+                               classOfUsage4         (4),  -- Scanned, normal priority (default)
+                               classOfUsage5         (5),  -- Scanned, selected group
+                               classOfUsage6         (6),  -- Scanned, high priority
+                               classOfUsage7         (7),  -- Scanned, SwMI locked
+                               classOfUsage8         (8)   -- Always scanned
+                            } OPTIONAL
+}
+
+-- Request for removing one or more subscribers from a dynamic TETRA group.
+-- Sent from ACAPI application to ACAPI server.
+SS-DynGroupDel ::= [APPLICATION 55] IMPLICIT SEQUENCE
+{
+    dynGroupSSI        [0] IMPLICIT TETRA-Address,                            -- Address of the dynamic group
+    affectedSSI        [1] IMPLICIT SEQUENCE SIZE (1..255) OF TETRA-Address   -- SSI to be removed from group
+}
+
+-- Response to SS-DynGroupAdd from the system or from a single subscriber.
+-- Sent from ACAPI server to ACAPI application.
+SS-DynGroupAdd-Ack ::= [APPLICATION 56] IMPLICIT SEQUENCE
+{
+    dynGroupSSI        [0] IMPLICIT TETRA-Address,         -- Address of the dynamic group
+    resultOfAssignment [1] IMPLICIT INTEGER                -- Result of the assignment
+                           {
+                              assignmentRejectedForAnyReason                   (0),
+                              assignmentAccepted                               (1),
+                              assignmentNotAcceptedForSecurityReasons          (2),
+                              assignmentRejectedForCapacityExceededReasons     (3),
+                              assignmentRejectedSSNotSupportedByMS             (4),
+                              assignmentRejectedDgnaActionNotSupportedByMS     (5),
+                              assignmentRejectedNoAnswerFromMS                 (6),
+                              assignmentRejectedMSIsBusy                       (7),
+                              assignmentRejectedMSNotAllowedToRecvAssignments  (8),
+                              assignmentRejectedGroupNotAllowedToBeAssigned    (9),
+                              assignmentProceeding                             (10),
+                              assignmentRejectedGeneralError                   (11),
+                              assignmentRejectedUnknownSSITSI                  (12),
+                              assignmentRejectedMSLSIsNotRegistered            (13),
+                              assignmentRejectedRoutingProblemInInfrastructure (14),
+                              assignmentRejectedMessageConsistencyError        (15)
+                           },
+    affectedSSI        [2] IMPLICIT TETRA-Address OPTIONAL,  -- Affected mobile station.
+                                                             -- Not used for "assignmentProceeding".
+    resultOfAttachment [3] IMPLICIT INTEGER                  -- Result of Attachment, not used for "assignmentProceeding"
+                           {
+                              notAttached            (0),
+                              attached               (1)
+                           } OPTIONAL
+}
+
+-- Response to SS-DynGroupDel from the system or from a single subscriber.
+-- Sent from ACAPI server to ACAPI application.
+SS-DynGroupDel-Ack ::= [APPLICATION 57] IMPLICIT SEQUENCE
+{
+    dynGroupSSI          [0] IMPLICIT TETRA-Address,       -- Address of the dynamic group
+    resultOfDeassignment [1] IMPLICIT INTEGER              -- Result of the de-assignment
+                             {
+                                groupDetached                                      (0),
+                                groupDetachedAndDeassigned                         (1),
+                                deassignmentRejectedSSNotSupportedByMS             (4),
+                                deassignmentRejectedDgnaActionNotSupportedByMS     (5),
+                                deassignmentRejectedNoAnswerFromMS                 (6),
+                                deassignmentRejectedMSBusy                         (7),
+                                deassignmentRejectedMSNotAllowedToRecvAssignments  (8),
+                                deassignmentRejectedGroupNotAllowedToBeDeassigned  (9),
+                                deassignmentProceeding                             (10),
+                                deassignmentRejectedGeneralError                   (11),
+                                deassignmentRejectedUnknownSSITSI                  (12),
+                                deassignmentRejectedMSLSIsNotRegistered            (13),
+                                deassignmentRejectedRoutingProblemInInfrastructure (14),
+                                deassignmentRejectedMessageConsistencyError        (15)
+                             },
+    affectedSSI          [2] IMPLICIT TETRA-Address OPTIONAL  -- Affected mobile station
+}
+
+-- Request for the members of a dynamic TETRA group and their status.
+-- Sent from ACAPI application to ACAPI server.
+SS-DynGroupInterrogate ::= [APPLICATION 58] IMPLICIT SEQUENCE
+{
+    dynGroupSSI        [0] IMPLICIT TETRA-Address          -- Address of the dynamic group
+}
+
+-- Response to an interrogate request (SS-DynGroupInterrogate) for a dynamic TETRA group.
+-- The state of 256 subscribers is transferred as a maximum.
+-- Sent from ACAPI server to ACAPI application.
+-- The data comprise the information base the ACAPI server has gained from the messages 
+-- SS-DynGroupAdd-Ack and SS-Dyn≠GroupDel-Ack received from the mobile stations.
+-- The ACAPI server has no information about DGNA operations initiated on other ACAPI servers.
+SS-DynGroupInterrogate-Ack ::= [APPLICATION 59] IMPLICIT SEQUENCE
+{
+    dynGroupSSI        [0] IMPLICIT TETRA-Address,         -- Address of the dynamic group
+    numberOfMembers    [1] IMPLICIT INTEGER,               -- Number of known group members
+    memberState        [2] IMPLICIT SEQUENCE SIZE(0..255) OF DynGroupMemberState   -- State of the members (max. 256)
+}
+
+-- Request for assigning a dynamic TETRA group to the application.
+-- Sent from ACAPI server to ACAPI application.
+SS-DynGroupAssign ::= [APPLICATION 60] IMPLICIT SEQUENCE
+{
+    applicationSSI      [0] IMPLICIT TETRA-Address,        -- Application address (individual)
+    dynGroupSSI         [1] IMPLICIT TETRA-Address,        -- Address of the dynamic group
+    groupAttachmentMode [2] IMPLICIT INTEGER
+                            {
+                               noAttachmentRequired  (0),
+                               attachmentRequired    (1)
+                            },
+    mnemonicGroupName   [3] IMPLICIT OCTET STRING (SIZE(1..15)) OPTIONAL,   -- Mnemonic group name to be displayed
+    classOfUsage        [4] IMPLICIT INTEGER               -- (OPTIONAL)
+                            {
+                               classOfUsage1         (1),  -- Reserved
+                               classOfUsage2         (2),  -- Not scanned
+                               classOfUsage3         (3),  -- Scanned, low priority
+                               classOfUsage4         (4),  -- Scanned, normal priority (default)
+                               classOfUsage5         (5),  -- Scanned, selected group
+                               classOfUsage6         (6),  -- Scanned, high priority
+                               classOfUsage7         (7),  -- Scanned, SwMI locked
+                               classOfUsage8         (8)   -- Always scanned
+                            } OPTIONAL
+}
+
+
+-- Response to an assign request (SS-DynGroupAssign), sent from ACAPI application to ACAPI server.
+SS-DynGroupAssign-Ack ::= [APPLICATION 61] IMPLICIT SEQUENCE
+{
+    applicationSSI     [0] IMPLICIT TETRA-Address,         -- Application address (individual)
+    dynGroupSSI        [1] IMPLICIT TETRA-Address,         -- Address of the dynamic group
+    resultOfAssignment [2] IMPLICIT INTEGER
+                           {
+                              assignmentRejectedForAnyReason            (0),
+                              assignmentAccepted                        (1),
+                              assignmentNotAcceptedForSecurityReasons   (2),
+                              assignmentRejectedForCapacityReasons      (3)
+                           },
+    resultOfAttachment [3] IMPLICIT INTEGER
+                           {
+                              notAttached            (0),
+                              attached               (1)
+                           }
+ }
+
+
+-- Request to remove the application from a dynamic TETRA group.
+-- Sent from ACAPI server to ACAPI application.
+SS-DynGroupDeassign ::= [APPLICATION 62] IMPLICIT SEQUENCE
+{
+    applicationSSI     [0] IMPLICIT TETRA-Address,         -- Application address (individual)
+    dynGroupSSI        [1] IMPLICIT TETRA-Address          -- Address of the dynamic group
+}
+
+
+-- Response to a deassign request (SS-DynGroupDeassign), sent from ACAPI application to ACAPI server.
+SS-DynGroupDeassign-Ack ::= [APPLICATION 63] IMPLICIT SEQUENCE
+{
+    applicationSSI       [0] IMPLICIT TETRA-Address,       -- Application address (individual)
+    dynGroupSSI          [1] IMPLICIT TETRA-Address,       -- Address of the dynamic group
+    resultOfDeassignment [2] IMPLICIT INTEGER
+                             {
+                                detached                (0),
+                                detachedAndDeassigned   (1)
+                             }
+}
+
+-- SUPPLEMENTARY SERVICES for Call Forwarding
+-- ==========================================
+
+-- Request for a call forwarding entry for an individual subscriber.
+-- Call forwarding is possible unconditional, on busy, on no reply and if a subscriber is not reachable.
+-- Sent from ACAPI application to ACAPI server.
+SS-CallForwardActivate  ::= [APPLICATION 64] IMPLICIT SEQUENCE
+{
+    forwardedPartySSI  [0] IMPLICIT TETRA-Address,         -- Individual address, which shall be forwarded
+    forwardToParty     [1] AddressType,                    -- Address of forwarding target
+    forwardingType     [2] IMPLICIT CallForwardingType,    -- Unconditional, on busy, on no reply, on not reachable
+    forwardingService  [3] IMPLICIT ForwardingServiceType  -- None, Call Control, Short Data Service, CC + SDS
+}
+
+-- Response to SS-CallForwardActivate, sent from ACAPI server to ACAPI application.
+SS-CallForwardActivate-Ack  ::= [APPLICATION 65] IMPLICIT SEQUENCE
+{
+    forwardedPartySSI  [0] IMPLICIT TETRA-Address,         -- Individual address, which shall be forwarded
+    forwardToParty     [1] AddressType,                    -- Address of forwarding target
+    forwardingType     [2] IMPLICIT CallForwardingType,    -- Unconditional, on busy, on no reply, on not reachable
+    forwardingService  [3] IMPLICIT ForwardingServiceType, -- None, Call Control, Short Data Service, CC + SDS
+    forwardingResult   [4] IMPLICIT CallForwardingResultType  -- Accept, reject, ...
+}
+
+-- Request of the removal of an existing call forwarding entry for an individual subscriber.
+-- The removal does always apply for all services (call control/SDS).
+-- Sent from ACAPI application to ACAPI server.
+SS-CallForwardDeactivate ::= [APPLICATION 66] IMPLICIT SEQUENCE
+{
+    forwardedPartySSI  [0] IMPLICIT TETRA-Address,         -- Individual address, which shall be forwarded
+    forwardingType     [1] IMPLICIT CallForwardingType     -- Unconditional, on busy, on no reply, on not reachable
+}
+
+-- Response to SS-CallForwardDeactivate, sent from ACAPI server to ACAPI application.
+SS-CallForwardDeactivate-Ack ::= [APPLICATION 67] IMPLICIT SEQUENCE
+{
+    forwardedPartySSI  [0] IMPLICIT TETRA-Address,         -- Individual address, which shall be forwarded
+    forwardingType     [1] IMPLICIT CallForwardingType,    -- Unconditional, on busy, on no reply, on not reachable
+    forwardingResult   [2] IMPLICIT CallForwardingResultType -- Accept, reject, ...
+}
+
+-- Request for the deassignment of all call forwarding assignments in the ACAPI server.
+-- Sent from ACAPI application to ACAPI server.
+SS-CallForwardCancelAll ::= [APPLICATION 68] IMPLICIT SEQUENCE
+{
+    -- Nothing to send
+}
+
+-- Response to SS-CallForwardCancelAll, sent from ACAPI server to ACAPI application.
+SS-CallForwardCancel-Ack ::= [APPLICATION 69] IMPLICIT SEQUENCE
+{
+    cancelResult       [1] IMPLICIT CallForwardingResultType     -- Accept, reject, ...
+}
+
+-- Request for transmission of the call forwarding entries administrated by this ACAPI server,
+-- sent from ACAPI application to ACAPI server. If no range is given, all entries are transferred.
+-- The answer is given by the ACAPI server directly, no interaction with the TETRA system is required.
+SS-CallForwardInterrogate ::= [APPLICATION 130] IMPLICIT SEQUENCE
+{
+    startSSI              [0] IMPLICIT INTEGER OPTIONAL,   -- Start of a range of TETRA identities
+    endSSI                [1] IMPLICIT INTEGER OPTIONAL,   -- End of a range of TETRA identities
+    maxTransferredEntries [2] IMPLICIT INTEGER OPTIONAL    -- Maximum number of CF entries the ACAPI server
+                                                           -- should transfer. If set to zero, only the number of
+                                                           -- entries in the range is transferred.
+}
+
+-- Response to an interrogate request (SS-CallForwardInterrogate) for the forwarding entries ordered by this
+-- ACAPI server. Sent from ACAPI server to ACAPI application.
+SS-CallForwardInterrogate-Ack ::= [APPLICATION 131] IMPLICIT SEQUENCE
+{
+    fragmentationInfo     [0] IMPLICIT FragmentationInfoType, -- How much PDUs are needed for transferring the
+                                                              -- whole information?
+    callForwardingEntries [1] IMPLICIT SEQUENCE SIZE(0..255) OF CallForwardingEntryType,
+                                                              -- Call Forwarding entries matching the filter
+                                                              -- criteria (max. 256 per PDU)
+    numberOfEntries       [2] IMPLICIT INTEGER OPTIONAL       -- Number of call forwarding entries matching the
+                                                              -- filter criteria (only transferred in first PDU)
+}
+
+
+
+
+-- SUPPLEMENTARY SERVICES for identity assignments (OOCI)
+-- ======================================================
+
+-- Request for the assignment of an object oriented call identity (OOCI) to a valid tetra subscriber.
+-- The assigned entry is used as an ISDN number with up to 24 digits. The OOCI is addressed to an OOCI Gateway SSI.
+-- It is possible to assign more than one OOCI to a valid SSI.
+-- Valid range for the Gateway SSI is 16777184..16777213 (0xFFFFE0..0xFFFFFD).
+-- At least the following Gateway SSIs are pre-defined:
+--    PSTN-Gateway:                      16777184 (0xFFFFE0)
+--    ISDN-Gateway:                      16777185 (0xFFFFE1)
+--    Default PABX-Gateway:              16777186 (0xFFFFE2)
+--    RUN-Gateway (Radio User Number):   16777187 (0xFFFFE3)
+--    SwMI Identity:                     16777213 (0xFFFFFD)
+
+
+
+-- Request for the assignment of an object oriented call identity (OOCI) to a tetra subscriber.
+-- Sent from ACAPI application to ACAPI server.
+SS-ObjectIdentityAssign ::= [APPLICATION 110] IMPLICIT SEQUENCE
+{
+    assignedOOCI       [0] IMPLICIT ISDN-Address,          -- Individual ISDN type address, which shall be assigned
+                                                           -- to another party
+    affectedPartySSI   [1] IMPLICIT TETRA-Address,         -- Individual address to which the number shall be assigned
+    useOociAsCLI       [2] IMPLICIT UseOociAsCliType OPTIONAL -- Defines if and how the assigned OOCI is used for CLI.
+                                                              -- Default: "0000" (Do always not use OOCI as CLI)
+}
+
+-- Response to SS-ObjectIdentityAssign, sent from ACAPI server to ACAPI application.
+SS-ObjectIdentityAssign-Ack ::= [APPLICATION 111] IMPLICIT SEQUENCE
+{
+    assignedOOCI       [0] IMPLICIT ISDN-Address,          -- Individual ISDN type address, which shall be assigned
+                                                           -- to another party
+    affectedPartySSI   [1] IMPLICIT TETRA-Address,         -- Individual address, to which shall be assigned
+    useOociAsCLI       [2] IMPLICIT UseOociAsCliType,      -- Defines if and how the assigned OOCI is used for CLI
+    assingmentResult   [3] IMPLICIT OociResultType         -- Accept, reject, ...
+}
+
+-- Request for the deassignment of an object oriented call identity (OOCI) for a tetra subscriber.
+-- Sent from ACAPI application to ACAPI server.
+SS-ObjectIdentityDeassign ::= [APPLICATION 112] IMPLICIT SEQUENCE
+{
+    assignedOOCI       [0] IMPLICIT ISDN-Address,          -- Individual ISDN type address, which shall be deassigned
+    typeOfDeassignment [1] IMPLICIT INTEGER                -- OPTIONAL
+                           {
+                              suspend                (0),  -- Should be used if OOCI setting should be disabled
+                                                           -- temporarily (default)
+                              delete                 (1)   -- Should be used if OOCI setting should be removed
+                                                           -- "forever"
+                           } OPTIONAL
+}
+
+-- Response to SS-IdentityDeassign, sent from ACAPI server to ACAPI application.
+SS-ObjectIdentityDeassign-Ack ::= [APPLICATION 113] IMPLICIT SEQUENCE
+{
+    assignedOOCI       [0] IMPLICIT ISDN-Address,          -- Individual ISDN type address, which shall be deassigned
+    deassingmentResult [1] IMPLICIT OociResultType         -- Accept, reject, ...
+}
+
+-- Request for the deassignment of all OOCI assignments ordered on this gateway.
+-- Sent from ACAPI application to ACAPI server.
+SS-ObjectIdentityCancelGateway ::= [APPLICATION 114] IMPLICIT SEQUENCE
+{
+    gatewayID          [0] IMPLICIT SSIType                -- SSI of the OOCI Gateway
+}
+
+-- Response to SS-ObjectIdentityCancelGateway, sent from ACAPI server to ACAPI application.
+SS-ObjectIdentityCancelGateway-Ack ::= [APPLICATION 115] IMPLICIT SEQUENCE
+{
+    gatewayID           [0] IMPLICIT SSIType,              -- SSI of the OOCI Gateway
+    cancelGatewayResult [1] IMPLICIT OociResultType        -- Accept, reject, ...
+}
+
+-- Request for transmission of all OOCI assignments administrated by this ACAPI server,
+-- sent from ACAPI application to ACAPI server. If no range is given, all entries are transferred.
+-- The answer is given by the ACAPI server directly, no interaction with the TETRA system is required.
+SS-ObjectIdentityInterrogate ::= [APPLICATION 116] IMPLICIT SEQUENCE
+{
+    gatewaySSI            [0] IMPLICIT SSIType,            -- SSI of the OOCI Gateway
+    startSSI              [1] IMPLICIT INTEGER OPTIONAL,   -- Start of a range of TETRA identities
+    endSSI                [2] IMPLICIT INTEGER OPTIONAL,   -- End of a range of TETRA identities
+    maxTransferredEntries [3] IMPLICIT INTEGER OPTIONAL    -- Maximum number of OOCI entries the Application Platform
+                                                           -- should transfer. If set to zero, only the number
+                                                           -- Of entries in the range is transferred.
+}
+
+-- Response to interrogate request (SS-ObjectIdentityInterrogate) for the OOCI assignments ordered by this ACAPI server.
+-- Sent from ACAPI server to ACAPI application.
+SS-ObjectIdentityInterrogate-Ack ::= [APPLICATION 117] IMPLICIT SEQUENCE
+{
+    gatewaySSI         [0] IMPLICIT SSIType,               -- SSI of the OOCI Gateway
+    fragmentationInfo  [1] IMPLICIT FragmentationInfoType, -- How much PDUs are needed for transferring
+                                                           -- the whole information?
+    oociEntries        [2] IMPLICIT SEQUENCE SIZE(0..255) OF OociEntryType,
+                                                           -- The OOCI entries matching the filter criteria
+                                                           -- (max. 256 per PDU)
+    numberOfEntries    [3] IMPLICIT INTEGER OPTIONAL       -- Number of OOCI entries matching the filter criteria
+                                                           -- (only transferred in first PDU)
+}
+
+
+
+
+-- MONITORING SERVICE
+-- ==================
+
+-- Request from the ACAPI application to ACAPI server for monitoring one ore more TETRA subscriber.
+MON-Monitoring-Req ::= [APPLICATION 70] IMPLICIT SEQUENCE
+{
+    monServices        [0] IMPLICIT MonitoringService,     -- Requested services for monitoring
+    monBeginSSI        [1] IMPLICIT TETRA-Address,         -- Address of subscriber or start of monitoring range
+    monEndSSI          [2] IMPLICIT TETRA-Address OPTIONAL,-- End of a range. A range can comprise 65536 SSIs at maximum.
+                                                           -- This field is invalid for external subscribers.
+    monHandle          [3] IMPLICIT INTEGER OPTIONAL,      -- Unique handle to identify the monitoring job (only valid
+                                                           -- for modifying an existing monitoring job).
+    monStartTime       [4] IMPLICIT GeneralizedTime OPTIONAL,   -- Start time (local) for monitoring
+    monEndTime         [5] IMPLICIT GeneralizedTime OPTIONAL,   -- End time (local) of monitoring request
+    monPersistentData  [6] IMPLICIT BOOLEAN OPTIONAL       -- (not implemented) Persistent buffering of monitoring data.
+                                                           -- Default: False
+}
+
+-- Response to MON-Monitoring-Req, from ACAPI server to ACAPI application.
+MON-Monitoring-Ack ::= [APPLICATION 71] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job, assigned by
+                                                           -- the ACAPI server
+    monServices        [1] IMPLICIT MonitoringService,     -- Requested services
+    monBeginSSI        [2] IMPLICIT TETRA-Address,         -- Target address (individual or group) or start of block
+    monEndSSI          [3] IMPLICIT TETRA-Address OPTIONAL,-- End of a range. A range can comprise 65536 SSIs at maximum.
+                                                           -- This field is invalid for external subscribers.
+    countMonParties    [4] IMPLICIT INTEGER OPTIONAL,      -- Number of (known) monitored parties
+    monStartTime       [5] IMPLICIT GeneralizedTime OPTIONAL, -- Start time (local) for monitoring
+    monEndTime         [6] IMPLICIT GeneralizedTime OPTIONAL, -- End time (local) of monitoring request
+    persistentData     [7] IMPLICIT BOOLEAN OPTIONAL       -- (not implemented) Persistent buffering of monitoring data.
+                                                           -- Default: False
+}
+
+-- Request from the ACAPI application to ACAPI server for monitoring of one fleet of TETRA subscribers.
+MON-FleetMonitoring-Req ::= [APPLICATION 72] IMPLICIT SEQUENCE
+{
+    monServices        [0] IMPLICIT MonitoringService,     -- Requested services for monitoring
+    monFleet           [1] IMPLICIT INTEGER,               -- Identification of the specific fleet
+    monHandle          [2] IMPLICIT INTEGER OPTIONAL,      -- Unique handle to identify the monitoring job (only valid
+                                                           -- for modifying an existing monitoring job).
+    monStartTime       [3] IMPLICIT GeneralizedTime OPTIONAL, -- Start time (local) for monitoring
+    monEndTime         [4] IMPLICIT GeneralizedTime OPTIONAL, -- End time (local) of monitoring request
+    monPersistentData  [5] IMPLICIT BOOLEAN OPTIONAL       -- (not implemented) Persistent buffering of monitoring data.
+                                                           -- Default: False
+}
+
+-- Response to MON-FleetMonitoring-Req, from ACAPI server to ACAPI application.
+MON-FleetMonitoring-Ack ::= [APPLICATION 73] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job, assigned by
+                                                           -- the ACAPI server
+    monServices        [1] IMPLICIT MonitoringService,     -- Requested services
+    monFleet           [2] IMPLICIT INTEGER,               -- Identification of the specific fleet
+    monStartTime       [3] IMPLICIT GeneralizedTime OPTIONAL, -- Start time (local) for monitoring
+    monEndTime         [4] IMPLICIT GeneralizedTime OPTIONAL, -- End time (local) of monitoring request
+    persistentData     [5] IMPLICIT BOOLEAN OPTIONAL       -- (not implemented) Persistent buffering of monitoring data.
+                                                           -- Default: False
+}
+
+
+
+-- Message Confirm to all monitoring information PDUs (MON-LocationUpdate, MON-LocationDetach, MON-SDS-Data,
+-- MON-Information, MON-TxDemand, MON-TxGrant, MON-Disconnect).
+-- Should only be sent by ACAPI application if monPersistentData=True (not implemented). In this case the message backup
+-- is cleared by the ACAPI server.
+MON-Data-Ack ::= [APPLICATION 74] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,  -- Unique handle for Monitoring Request, from ACAPI server
+    monMessageAck      [1] IMPLICIT INTEGER   -- Confirm that all messages with monMessageID <= monMessageAck are OK
+}
+
+-- Close a Monitoring-Job, from ACAPI application to ACAPI server
+-- or vice versa (e.g. if monEndTime expired).
+MON-Close ::= [APPLICATION 75] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    monServices        [1] IMPLICIT MonitoringService,     -- Services to close
+    result             [2] IMPLICIT INTEGER
+                           {
+                              closeRequest           (0),  -- Monitoring Close Request from an ACAPI Application
+                              noPermission           (1),  -- Monitoring for requested subscriber is not permitted
+                              subscriberError        (2),  -- Subscriber or part of subscriber block is not valid
+                              serviceNotAvail        (3),  -- Requested monitoring service is not available
+                              fleetUnknown           (4),  -- Unknown fleet (MON-FleetMonitoring-Req) or subscriber
+                              endTimeExpired         (5),  -- Requested monitoring time is expired
+                              alreadyMonByOtherGW    (6),  -- Entity already monitored by another gateway
+                              unknownVirtDest        (7)   -- Unknown virtual destination location area
+                           },
+    monBeginSSI        [3] IMPLICIT TETRA-Address,         -- Target address (individual or group) or start of block
+    monEndSSI          [4] IMPLICIT TETRA-Address OPTIONAL,-- End of a range. A range can comprise 65536 SSIs at maximum.
+                                                           -- This field is invalid for external subscribers.
+    monFleet           [5] IMPLICIT INTEGER OPTIONAL       -- Identification of the specific fleet
+}
+
+
+-- Response to MON-Close.
+MON-Close-Ack ::= [APPLICATION 76] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    result             [1] IMPLICIT INTEGER
+                           {
+                              closeAccepted          (0),
+                              parameterError         (1)
+                           }
+}
+
+-- Monitoring information for registration data of a subscriber.
+-- Sent from ACAPI server to ACAPI application.
+MON-LocationUpdate ::= [APPLICATION 77] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    monMessageID       [1] IMPLICIT INTEGER,               -- Unique Message-ID of each monitoring information
+    monSSI             [2] IMPLICIT TETRA-Address,         -- Target address (individual)
+    locationUpdate     [3] IMPLICIT LocUpdateType,         -- Roaming, Migrating, Periodic, ...
+    appendLocationArea [4] IMPLICIT BOOLEAN,               -- Request to append location area to registered area
+    locationArea       [5] IMPLICIT LocationAreaType,      -- Location area of the subscriber
+    timeStamp          [6] IMPLICIT GeneralizedTime        -- Time stamp of this incident
+}
+
+-- Monitoring information for deregistration of a subscriber.
+-- Sent from ACAPI server to ACAPI application.
+MON-LocationDetach  ::= [APPLICATION 78] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    monMessageID       [1] IMPLICIT INTEGER,               -- Unique Message-ID of each monitoring information
+    monSSI             [2] IMPLICIT TETRA-Address,         -- Target address (individual)
+    locationArea       [3] IMPLICIT LocationAreaType,      -- Location area of the subscriber
+    timeStamp          [4] IMPLICIT GeneralizedTime        -- Time stamp of this incident
+}
+
+-- Informs the ACAPI application about SDS-Data sent from or to a monitored subscriber.
+-- Sent from ACAPI server to ACAPI application.
+MON-SDS-Data ::= [APPLICATION 79] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    monMessageID       [1] IMPLICIT INTEGER,               -- Unique Message-ID of each monitoring information
+    calledParty        [2] AddressType,                    -- Target address (individual or group)
+    callingParty       [3] AddressType,                    -- Source address (individual)
+    sdsHandle          [4] IMPLICIT Integer16,             -- (0x0000-0xFFFF) Unique ID, created by sender of the SDS
+    sdsData            [5] SDSDataType,                    -- SDS-Data
+    sourceLocation     [6] IMPLICIT LocationAreaType,      -- Source Location Area + Cell
+    timeStamp          [7] IMPLICIT GeneralizedTime,       -- Time stamp of this incident
+    acknowlegeExpected [8] IMPLICIT BOOLEAN OPTIONAL,      -- Request for receipt. Default: False
+    macFacility        [9] IMPLICIT MacFacilityType OPTIONAL -- Information about uplink RSSI and path delay
+}
+
+-- Informs the ACAPI application about an SDS-Data-Ack sent from or to a monitored subscriber.
+-- Sent from ACAPI server to ACAPI application.
+MON-SDS-Ack  ::= [APPLICATION 80] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    monMessageID       [1] IMPLICIT INTEGER,               -- Unique Message-ID of each monitoring information
+    calledParty        [2] AddressType,                    -- Target address (individual or group)
+    callingParty       [3] AddressType,                    -- Source address (individual)
+    sdsHandle          [4] IMPLICIT Integer16,             -- (0x0000-0xFFFF) Unique ID, created by sender of the SDS
+    result             [5] IMPLICIT INTEGER
+                           {
+                              sdsTransferOK          (0),
+                              sdsTransferFailed      (1),
+                              subscriberError        (2),
+                              subscriberOffline      (3)
+                           },
+    timeStamp          [6] IMPLICIT GeneralizedTime        -- Time stamp of this incident
+}
+
+-- Informs the ACAPI application about the state of the monitored call and other information.
+-- Sent from ACAPI server to ACAPI application.
+MON-CC-Information ::= [APPLICATION 81] IMPLICIT SEQUENCE
+{
+    monHandle           [0] IMPLICIT INTEGER,              -- Unique handle to identify the monitoring job
+    monMessageID        [1] IMPLICIT INTEGER,              -- Unique Message-ID of each monitoring information
+    calledParty         [2] AddressType,                   -- Target address (individual or group)
+    callingParty        [3] AddressType,                   -- Source address (individual)
+    callID              [4] IMPLICIT INTEGER,              -- Unique ID of the call
+    callState           [5] IMPLICIT MonCallStateType,     -- Progressing, callQueued, subscriberPaged, ringing, ...
+    hookSignalling      [6] IMPLICIT BOOLEAN,              -- False = No hook signalling, True = Hook signalling
+    duplexMode          [7] IMPLICIT BOOLEAN,              -- False = Semi-Duplex, True = Duplex requested
+    timeStamp           [8] IMPLICIT GeneralizedTime,      -- Time stamp of this incident
+    areaSelection       [9] IMPLICIT AreaType OPTIONAL,    -- Area Selection for target mobiles (only in group-mode)
+    callTimeOut         [10] IMPLICIT TetraCallTime OPTIONAL,    -- Predefined values for maximal call time, 
+                                                                 -- 0=infinite (default)
+    callPriority        [11] IMPLICIT CallPriorityType OPTIONAL, -- Call priority
+    requestToTransmit   [12] IMPLICIT BOOLEAN OPTIONAL,          -- Request for transmission (PTT)
+                                                           -- Default value is False if hookSignalling=True
+                                                           -- Default value is True  if hookSignalling=False
+    ssNotification      [13] IMPLICIT SS-NotificationType OPTIONAL, -- Notification Indicator for suppl. services
+    disconnectCause     [14] IMPLICIT DisconnectType OPTIONAL,   -- Reason for the call end
+    callingLocationArea [15] IMPLICIT LocationAreaType OPTIONAL, -- Location Area of the source mobile
+    calledLocationArea  [16] IMPLICIT LocationAreaType OPTIONAL, -- Location Area of the destination mobile
+    basicService        [17] IMPLICIT BasicServiceType OPTIONAL, -- Point2point, Point2multipoint, encryption,
+                                                                 -- speech
+    groupMemberParty    [18] AddressType OPTIONAL,         -- (V5) Address of a member of a group call, which is
+                                                           --  monitored and just took part in the call for first time.
+    elapsedTime         [19] IMPLICIT INTEGER OPTIONAL,    -- (V5) Time in seconds since beginning of the call
+    remainingTime       [20] IMPLICIT INTEGER OPTIONAL,    -- (V5) Time in seconds until call will latest be ended
+    cliControl          [21] IMPLICIT CliType OPTIONAL     -- (V5) Calling party identification restriction
+}
+
+-- #### This PDU will not be supported anymore in the future ####
+-- Indication that the permission to speak (PTT) was demanded in the monitored call by the demandPartySSI
+-- Sent from ACAPI server to ACAPI application.
+MON-TxDemand ::= [APPLICATION 82] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    monMessageID       [1] IMPLICIT INTEGER,               -- Unique Message-ID of each monitoring information
+    demandPartySSI     [2] IMPLICIT TETRA-Address,         -- Address of demanding subscriber
+    callID             [3] IMPLICIT INTEGER,               -- Unique ID of the call,
+    timeStamp          [4] IMPLICIT GeneralizedTime,       -- Time stamp of this incident
+    txPriority         [5] IMPLICIT TxPriorityType OPTIONAL,  -- LowPriority, highPriority, emergencyPriority
+    encryption         [6] IMPLICIT BOOLEAN OPTIONAL       -- False: Clear Mode (default)
+                                                           -- True:  TETRA End-to-End encryption
+}
+
+-- (V5) Request to transmit to a monitored voice call.
+-- Sent from ACAPI application to ACAPI server (uplink).
+-- If no line ressource is specified, the following line resource is used for the transmission:
+--   + in semi duplex calls: the line resource which is used for the interception (specified in MON-Intercept-Req)
+--   + in duplex calls:      the first line resource which was specified in MON-Intercept-Req
+-- With the field "lineInformation" the application can request to use the second line specified in MON-Intercept-Req
+MON-Uplink-TxDemand ::= [APPLICATION 93] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    demandPartySSI     [1] IMPLICIT TETRA-Address,         -- Address of demanding subscriber
+    callID             [2] IMPLICIT INTEGER,               -- Unique ID of the call
+    txPriority         [3] IMPLICIT TxPriorityType OPTIONAL,  -- Priority of this request
+    encryption         [4] IMPLICIT BOOLEAN OPTIONAL,      -- False: Clear Mode (default)
+                                                           -- True:  TETRA End-to-End encryption
+    lineInformation    [5] LineInformationType OPTIONAL,   -- Line resource to be used for the transmission
+    noNfLoopBack       [6] IMPLICIT BOOLEAN OPTIONAL       -- False: NF will be looped back on voice channel
+}
+
+-- Indication that the permission to speak (PTT) was ceased in the monitored call
+-- Sent from ACAPI server to ACAPI application.
+MON-TxCeased ::= [APPLICATION 83] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    monMessageID       [1] IMPLICIT INTEGER,               -- Unique Message-ID of each monitoring information
+    callPartySSI       [2] IMPLICIT TETRA-Address,         -- Address of subscriber
+    callID             [3] IMPLICIT INTEGER,               -- Unique ID of the call
+    timeStamp          [4] IMPLICIT GeneralizedTime,       -- Time stamp of this incident
+    txReqPermission    [5] IMPLICIT BOOLEAN OPTIONAL       -- (V5) Allowed to request for transmission. Default: True
+}
+
+-- (V5) Cease the permission to speak (PTT) during transmission to a monitored voice call.
+-- Sent from ACAPI application to ACAPI server (uplink).
+MON-Uplink-TxCeased ::= [APPLICATION 95] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    callParty          [1] AddressType,                    -- Target address (individual or group)
+    callID             [2] IMPLICIT INTEGER,               -- Unique ID of the call
+    txReqPermission    [3] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    ssNotification     [4] IMPLICIT SS-NotificationType OPTIONAL  -- Notification Indicator for supplementary services
+}
+
+-- Indication that the permission to speak (PTT) in the monitored call was granted to the transmittingParty
+-- Sent from ACAPI server to ACAPI application.
+MON-TxGrant ::= [APPLICATION 84] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    monMessageID       [1] IMPLICIT INTEGER,               -- Unique Message-ID of each monitoring information
+    callPartySSI       [2] IMPLICIT TETRA-Address,         -- Address (individual) of Monitoring Device
+    transmittingParty  [3] AddressType,                    -- Address of transmitting subscriber
+    callID             [4] IMPLICIT INTEGER,               -- Unique ID of the call
+    txGrant            [5] IMPLICIT TxGrantType,           -- Information about the permission to transmit
+    timeStamp          [6] IMPLICIT GeneralizedTime,       -- Time stamp of this incident
+    txReqPermission    [7] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    encryption         [8] IMPLICIT BOOLEAN OPTIONAL,      -- False: Clear Mode (default)
+                                                           -- True: TETRA End-to-End encryption
+    tpiRestriction     [9] IMPLICIT CliType OPTIONAL       -- (V5) Talking party identification restriction
+}
+
+-- Notification about a call party leaving the call.
+MON-Disconnect ::= [APPLICATION 85] IMPLICIT SEQUENCE
+{
+    monHandle            [0] IMPLICIT INTEGER,             -- Unique handle to identify the monitoring job
+    monMessageID         [1] IMPLICIT INTEGER,             -- Unique Message-ID of each monitoring information
+    disconnectedPartySSI [2] AddressType,                  -- Source address (individual)
+    callID               [3] IMPLICIT INTEGER,             -- Unique ID of the call
+    disconnectCause      [4] IMPLICIT DisconnectType,      -- Reason for the call end
+    timeStamp            [5] IMPLICIT GeneralizedTime,     -- Time stamp of this incident
+    callEnd              [6] IMPLICIT BOOLEAN OPTIONAL     -- (V5) The call ends with this disconnection
+}
+
+-- Request to get the call content to an (already established) audio line.
+-- Sent from ACAPI application to ACAPI server.
+-- (Only if automatic voice intercept is not used.)
+MON-Intercept-Req ::= [APPLICATION 86] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    callPartySSI       [1] IMPLICIT TETRA-Address,         -- Address (individual) of Monitoring Device
+    callID             [2] IMPLICIT INTEGER,               -- Unique ID of the call
+    lineInformation1   [3] LineInformationType,            -- Indicates the type, channel or number of an audio line
+    basicService       [4] IMPLICIT BasicServiceType OPTIONAL, -- Point2point, Point2multipoint, encryption, speech
+    lineInformation2   [5] LineInformationType  OPTIONAL   -- Identifies the second audio line (only for duplex calls)
+}
+
+-- Response to MON-Intercept-Req, from ACAPI server to ACAPI application.
+-- (Only if automatic voice intercept is not used.)
+MON-Intercept-Ack ::= [APPLICATION 87] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    callPartySSI       [1] IMPLICIT TETRA-Address,         -- Address (individual) of Monitoring Device
+    interceptSSI1      [2] AddressType,                    -- Source address (individual)
+    interceptSSI2      [3] AddressType,                    -- Target address (individual or groupe)
+    callID             [4] IMPLICIT INTEGER,               -- Unique ID of the call
+    duplexMode         [5] IMPLICIT BOOLEAN,               -- False = Semi-Duplex, True = Duplex requested
+    lineInfoAck1       [6] IMPLICIT LineInfoAckType,       -- Identication and state of the line resource (interceptSSI1 if duplex call)
+    basicService       [7] IMPLICIT BasicServiceType OPTIONAL,-- Point2point, Point2multipoint, encryption, speech
+    lineInfoAck2       [8] IMPLICIT LineInfoAckType OPTIONAL  -- Identication and state of 2nd line (interceptSSI2) (only for duplex calls)
+}
+
+-- Indication that the monitoring audio line is connected. Sent from ACAPI server to ACAPI application.
+-- If automatic voice intercept is not used, this is the 2nd response of the ACAPI server to MON-Intercept-Req.
+-- If automatic voice intercept is used, this PDU is sent automatically to the ACAPI application.
+MON-Intercept-Connect ::= [APPLICATION 88] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    callPartySSI       [1] IMPLICIT TETRA-Address,         -- Address (individual) of Monitoring Device
+    callID             [2] IMPLICIT INTEGER,               -- Unique ID of the call
+    duplexMode         [3] IMPLICIT BOOLEAN,               -- False = Semi-Duplex, True = Duplex requested
+    txGrant            [4] IMPLICIT TxGrantType OPTIONAL,  -- Information about the permission to transmit
+    callPriority       [5] IMPLICIT CallPriorityType OPTIONAL,-- Call priority
+    basicService       [6] IMPLICIT BasicServiceType OPTIONAL,-- Point2point, Point2multipoint, encryption, speech
+    lineInfoAck1       [7] IMPLICIT LineInfoAckType OPTIONAL, -- Only used for automatic voice intercept
+    lineInfoAck2       [8] IMPLICIT LineInfoAckType OPTIONAL  -- Only used for automatic voice intercept, only duplex
+}
+
+-- Indication that the monitoring audio line is disconnected, if sent from ACAPI server to ACAPI application.
+-- Request to disconnect the monitoring audio line, if sent from ACAPI application to ACAPI server.
+MON-Intercept-Disconnect ::= [APPLICATION 89] IMPLICIT SEQUENCE
+{
+    monHandle            [0] IMPLICIT INTEGER,             -- Unique handle to identify the monitoring job
+    disconnectedPartySSI [1] AddressType,                  -- Target address (individual or group)
+    callID               [2] IMPLICIT INTEGER,             -- Unique ID of the call
+    disconnectCause      [3] IMPLICIT DisconnectType       -- Reason for the disconnection
+}
+
+
+-- Response to MON-Intercept-Disconnect, only from ACAPI server to ACAPI application
+MON-Intercept-Disconnect-Ack ::= [APPLICATION 90] IMPLICIT SEQUENCE
+{
+    monHandle            [0] IMPLICIT INTEGER,             -- Unique handle to identify the monitoring job
+    disconnectedPartySSI [1] AddressType,                  -- Target address (individual or group)
+    callID               [2] IMPLICIT INTEGER,             -- Unique ID of the call
+    disconnectCause      [3] IMPLICIT DisconnectType       -- Reason for the disconnection
+}
+
+-- (V5) Request the ending for a monitored call, where the application is not the call owner.
+-- Sent from ACAPI application to ACAPI server.
+MON-ForcedCallEnd ::= [APPLICATION 91] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    disconnectCause    [2] IMPLICIT DisconnectType         -- Reason for the call end
+}
+
+-- (V5) Response to MON-ForcedCallEnd, sent from ACAPI server to ACAPI application.
+MON-ForcedCallEnd-Ack ::= [APPLICATION 92] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    callID             [1] IMPLICIT INTEGER,               -- Unique ID of the call
+    result             [2] IMPLICIT INTEGER
+                           {
+                              forcedCallEndOK        (0),
+                              failedUnspecified      (1),
+                              deniedNoPermission     (2),
+                              deniedWrongCallID      (3)
+                           }
+}
+
+-- (V5) Indication that the permission to speak was withdrawn by the system (in case of CC-TxDemand priority),
+-- sent from ACAPI server to ACAPI application.
+MON-TxInterrupt ::= [APPLICATION 96] IMPLICIT SEQUENCE
+{
+    monHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the monitoring job
+    monMessageID       [1] IMPLICIT INTEGER,               -- Unique Message-ID of each monitoring information
+    callPartySSI       [2] IMPLICIT TETRA-Address,         -- Target address (individual or group)
+    transmittingParty  [3] AddressType,                    -- Address of transmitting subscriber
+    callID             [4] IMPLICIT INTEGER,               -- Unique ID of the call
+    txGrant            [5] IMPLICIT TxGrantType,           -- Information about the permission to transmit
+    txReqPermission    [6] IMPLICIT BOOLEAN OPTIONAL,      -- Allowed to request for transmission. Default: True
+    encryption         [7] IMPLICIT BOOLEAN OPTIONAL,      -- False: Clear Mode (default)
+                                                           -- True: TETRA End-to-End encryption
+    tpiRestriction     [8] IMPLICIT CliType OPTIONAL       -- Talking party identification restriction
+}
+
+
+
+
+-- RESOURCE STATE MONITORING
+-- =========================
+
+--
+-- In the first release, only monitoring for resources managed by A-CAPI Application Platform is implemented
+--
+
+-- Request for resource monitoring of terminal or monitoring services, sent from ACAPI application to ACAPI server.
+-- The following items can be monitored:
+--      Connection to TETRA switch      (not implemented)
+--      Load information                (not implemented)
+--      Call control line resources
+RSM-ResourceMonitoring-Req  ::= [APPLICATION 100] IMPLICIT SEQUENCE
+{
+    systemConnectionReq  [0] IMPLICIT BOOLEAN,             -- (not implemented) Monitor the system connection state
+    resourceLoadReq      [1] IMPLICIT BOOLEAN,             -- (not implemented) Monitor the buffer and queue load
+    lineResourceStateReq [2] IMPLICIT SEQUENCE SIZE (0..99) OF LineResourceInfo, -- Monitor these line resources
+    stateChangeIndReq    [3] IMPLICIT BOOLEAN,             -- Request automatic inform. about changes in resource states
+    rsmHandle            [4] IMPLICIT INTEGER OPTIONAL     -- Unique handle to identify the resource state monitoring job
+                                                           -- (only valid for modifying an existing monitoring job).
+}
+
+-- Resource monitoring notification, sent from ACAPI server to ACAPI application.
+-- The ACAPI server informs the ACAPI application with this message about the state of the monitored resources.
+RSM-ResourceState-Ind  ::= [APPLICATION 101] IMPLICIT SEQUENCE
+{
+    rsmHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the resource state monitoring job
+    connectionState    [1] IMPLICIT SEQUENCE SIZE (0..255) OF SystemConnectionState OPTIONAL,
+                                                           -- (not implemented) State of the ACAPI system connections
+    resourceLoad       [2] IMPLICIT SEQUENCE SIZE (0..255) OF ResourceLoadInfo OPTIONAL,
+                                                           -- (not implemented) Load information for the resource
+    lineResourceState  [3] IMPLICIT SEQUENCE SIZE (0..255) OF LineInformationMask OPTIONAL
+                                                           -- Information about the state of the line resources
+}
+
+-- Termination of a resource monitoring job.
+-- Sent from ACAPI application to ACAPI server to cancel an existing resource state monitoring job.
+-- Sent from ACAPI server to ACAPI application to reject a requested resource state monitoring job, or to cancel an
+-- existing one.
+RSM-ResourceMonitoring-Close  ::= [APPLICATION 102] IMPLICIT SEQUENCE
+{
+    rsmHandle          [0] IMPLICIT INTEGER,               -- Unique handle to identify the resource state monitoring job
+    result             [1] IMPLICIT INTEGER
+                           {
+                              closeRequest           (0),  -- Close request from ACAPI application
+                              noPermission           (1),  -- Monitoring for the requested resource is not permitted
+                              lineResourceError      (2),  -- Requested resource is invalid
+                              connectionError        (3),  -- Requested connection is invalid
+                              handleUnknown          (4)   -- Unknown rsmHandle
+                           }
+}
+
+
+
+-- TYPE-DEFINITIONS FOR ACAPI
+-- ==========================
+
+Integer16     ::= INTEGER (0..65535)    -- 16 Bit Integer value
+SSIType       ::= INTEGER (0..16777215) -- 24 bits, as defined in ETS 300 392-1
+MCCType       ::= INTEGER (0..1023)     -- 10 bits, as defined in ETS 300 392-1
+MNCType       ::= INTEGER (0..16383)    -- 14 bits, as defined in ETS 300 392-1
+DialingString ::= IA5String (SIZE (1..24)) (FROM ("0123456789*#,"))    -- For external subscriber, used with gateway SSI
+DTMFString    ::= IA5String (SIZE (1..255))(FROM ("0123456789*#ABCD"))
+
+-- Address information for a TETRA subscriber
+TETRA-Address ::= SEQUENCE
+{
+    ssi                [0] IMPLICIT SSIType ,              -- Subscriber ident
+    mcc                [1] IMPLICIT MCCType OPTIONAL,      -- Mobile country code
+    mnc                [2] IMPLICIT MNCType OPTIONAL       -- Mobile network code
+}
+
+-- Address information for External ISDN-Subscriber or other Networks, connected via ISDN
+ISDN-Address ::= SEQUENCE
+{
+    externalSubscriber [0] IMPLICIT DialingString,         -- External subscriber number
+    gateWaySSI         [1] IMPLICIT SSIType                -- Gateway address (SSI) in the TETRA-Network
+}
+
+-- Common Address for incoming or outgoing calls and SDS
+AddressType ::= CHOICE
+{
+    tetraAddress       [0] IMPLICIT TETRA-Address,
+    iSDNAddress        [1] IMPLICIT ISDN-Address
+}
+
+-- Definition of the ACAPI services, used in ACAPI-OpenService and ACAPI-OpenService-Ack
+ServiceIDType  ::= INTEGER
+{
+    callControl                   (0),   -- Call Control (Speech and Circuit Mode Data)
+    shortData                     (1),   -- Short Data Service (SDS + Status)
+    monitoring                    (2),   -- Subscriber Monitoring, Interception
+    subscriberManagement          (3),   -- (not implemented) Subscriber Management
+    stateMonTerminalService       (4),   -- Resource State Monitoring for SDS and Call Control Service
+    stateMonMonitoringService     (5),   -- Resource State Monitoring for Subscriber Monitoring Service
+    maintenance                   (6),   -- (not implemented) Maintenance Services
+    supplementaryService          (7)    -- Supplementary Services, like Group-Attachment, DGNA, Call Forwarding, OOCA
+}
+
+-- Selection of target areas in group SDSes and group calls.
+-- Areas may be specific for different group addresses.
+AreaType ::= ENUMERATED
+{
+    areaNotDefined                (0),   -- (default)
+    area1                         (1),
+    area2                         (2),
+    area3                         (3),
+    area4                         (4),
+    area5                         (5),
+    area6                         (6),
+    area7                         (7),
+    area8                         (8),
+    area9                         (9),
+    area10                        (10),
+    area11                        (11),
+    area12                        (12),
+    area13                        (13),
+    area14                        (14),
+    allAreas                      (15)
+}
+
+-- Priority for transport and queuing messages in the TETRA system
+PriorityType ::= ENUMERATED
+{
+    priorityNotDefined            (0),   -- (default)
+    lowPriority                   (1),
+    highPriority                  (2),
+    emergencyPriority             (3)
+}
+
+-- TX-demand priority for Circuit Mode Calls
+TxPriorityType ::= ENUMERATED
+{
+    lowLevel                      (0),   -- (default)
+    highLevel                     (1),
+    preEmptiveLevel               (2),
+    emergencyLevel                (3),
+    extraEmergencyLevel1          (4),   -- Enables applications to override even emergency level
+    extraEmergencyLevel2          (5)    -- Enables applications to override even emergency levels
+}
+
+
+
+-- The different types of short data and status messages (SDS)
+SDSDataType  ::= CHOICE
+{
+    statusType         [0] IMPLICIT INTEGER (0..65535),
+    sdsType1           [1] IMPLICIT OCTET STRING (SIZE (2)),
+    sdsType2           [2] IMPLICIT OCTET STRING (SIZE (4)),
+    sdsType3           [3] IMPLICIT OCTET STRING (SIZE (8)),
+    sdsType4           [4] IMPLICIT SEQUENCE
+                           {
+                              sdsData     [0] IMPLICIT OCTET STRING (SIZE (0..256)),
+                              bitLength   [1] IMPLICIT INTEGER (0..2047) OPTIONAL   
+                                                           -- Only when bitLength < size of sdsType4 * 8
+                           }
+}
+
+-- Transmission grant to a user in a call
+TxGrantType ::= ENUMERATED
+{
+    txGranted                     (0),
+    txNotGranted                  (1),
+    txRequestQueued               (2),
+    txGrantedToAnotherUser        (3)
+}
+
+-- Not used, maybe in later releases
+CallOwnerType ::= ENUMERATED
+{
+    notCallOwner                  (0),   -- (Group call)
+    normalCallSetup               (1),   -- (Individual call)
+    callOwner                     (2),   -- (Group call)
+    amalgamatedCall               (3)    -- (Individual call)
+}
+
+-- Call priority for voice- or data calls, used in call control
+CallPriorityType ::= ENUMERATED
+{
+    priorityNotDefined            (0),   -- (default)
+    priority1                     (1),   -- Priority 1 (Lowest Priority)
+    priority2                     (2),   -- Priority 2
+    priority3                     (3),   -- Priority 3
+    priority4                     (4),   -- Priority 4
+    priority5                     (5),   -- Priority 5
+    priority6                     (6),   -- Priority 6
+    priority7                     (7),   -- Priority 7
+    priority8                     (8),   -- Priority 8
+    priority9                     (9),   -- Priority 9
+    priority10                    (10),  -- Priority 10
+    priority11                    (11),  -- Priority 11
+    preEmptivePrio1               (12),  -- Preemptive Priority 1
+    preEmptivePrio2               (13),  -- Preemptive Priority 2
+    preEmptivePrio3               (14),  -- Preemptive Priority 3
+    preEmptivePrio4               (15)   -- Preemptive Priority 4 (Emergency)
+}
+
+-- Communication Type, used in Call Control
+CommType  ::= ENUMERATED
+{
+    pointToPoint                  (0),   -- Normal call
+    pointToMultipoint             (1),   -- Group call
+    pointToMultipointAck          (2),   -- (not implemented) Acknowledged group call
+    broadcast                     (3)    -- Broadcast call
+}
+
+-- Specification of a used circuit mode channel, used in Call Control
+CircuitModeType  ::= INTEGER
+{
+    speechTETRA                   (0),   -- (default) TETRA coded speech or PCM/ISDN coded speech over TETRA vocoder
+    speechProprietary             (1),
+    dataUnprotected-7k2           (2),
+    dataUnprotected-14k4          (3),
+    dataUnprotected-21k6          (4),
+    dataUnprotected-28k8          (5),
+    dataLowProtection-4k8         (6),
+    dataLowProtection-9k6         (7),
+    dataLowProtection-14k4        (8),
+    dataLowProtection-19k2        (9),
+    dataHighProtection-2k4        (10),
+    dataHighProtection-4k8        (11),
+    dataHighProtection-7k2        (12),
+    dataHighProtection-9k6        (13)
+}
+
+-- Indication for Supplementary Services. See also EN 300 392-9 [12], clause 7.2.2.
+SS-NotificationType  ::= INTEGER
+{
+                                              --  COS
+    leBroadcast                        (0),   --   0: Late entry broadcast
+    leAcknowledgement                  (1),   --   1: (not implemented) Late entry acknowledgement
+    lePaging                           (2),   --   2: (not implemented) Late entry paging
+    alOperation                        (3),   --   3: Ambience Listening Operation
+    callBarredBySS-BIC                 (4),   --   4: (not implemented) Call barred by SS-BIC (Barring of Incoming Calls)
+    callBarredBySS-BOC                 (5),   --   5: (not implemented) Call barred by SS-BOC (Barring of Outgoing Calls)
+    callIsForwarded                    (6),   --   6: Call is forwarded (diverting)
+    forwardingActivated                (7),   --   7: Forwarding activated
+    identityPresentationRestricted     (8),   --   8: Identity presentation restricted
+    presentationRestrictionOverridden  (9),   --   9: Presentation restriction overridden
+    callWaitingInvoked                 (10),  --  10: Call waiting invoked
+    callPutOnHold                      (11),  --  11: Call put on hold (remote hold)
+    callOnHoldRetrieved                (12),  --  12: Call on hold retrieved (remote retrieval)
+    includeCall                        (13),  --  13: Include call
+    multipartyCall                     (14),  --  14: (not implemented) Multiparty call
+    lscInvoked                         (15),  --  15: (not implemented) LSC invoked (List Search Call)
+    callRejectedDueToSS-AS             (16),  --  16: (not implemented) Call rejected due to SS-AS (Area Selection)
+    ss-AS-NotInvoked                   (17),  --  17: (not implemented) SS-AS not invoked / supported (Area Selection)
+    icCalledUserAlerted                (18),  --  18: Include Call: Called user alerted
+    icCalledUserConnected              (19),  --  19: Include Call: Called user connected
+    icCalledUserIncluded               (20),  --  ne: Include Call: Called user included
+    icInvocationFailed                 (21),  --  ne: Include Call: Invocation of the called user failed
+    callProceeding                     (22),  --  20: Call proceeding
+    ssCFUInvoked                       (23),  --  21: Call Forwarding Unconditional invoked
+    ssCFBInvoked                       (24),  --  22: Call Forwarding on Busy invoked
+    ssCFNRyInvoked                     (25),  --  23: Call Forwarding on No Reply invoked
+    ssCFNRcInvoked                     (26),  --  24: Call Forwarding on Not Reachable invoked
+    alCallOrSpeechItem                 (27),  --  25: Ambience Listening - Call or Speech Item
+    callAuthorizationByDispatcher      (28)   --  ne: (V5) Only used in MON-CC-Information: Call authoriz. by dispatcher
+}
+
+
+-- Definition of the TETRA basic service, used in call control.
+-- Defines the characteristics of the call.
+BasicServiceType ::= SEQUENCE
+                 {
+    communicationType  [0] IMPLICIT CommType,                -- Point2point / Point2multipoint / Broadcast
+    encryption         [1] IMPLICIT BOOLEAN OPTIONAL,        -- False: Clear Mode
+                                                             -- True: TETRA End-to-End encryption
+    circuitModeType    [2] IMPLICIT CircuitModeType OPTIONAL -- Type of transmission (speech or data)
+}
+
+-- Definition of the type of the air encryption
+AirEncryptionType   ::= INTEGER
+{                                       -- COS
+    clearMode                     (0),  -- 0,2: Not encrypted
+    encrypeted-ClearAllowed       (1),  -- 1  : Encrypted. Modification from Encrypted to Clear Mode is allowed
+                                        --      (if not supported by opposite side).
+    encrypeted-ClearNotAllowed    (2)   -- 3  : Encrypted. Modification from Encrypted to Clear Mode is NOT allowed
+                                        --      (if not supported by opposite side).
+}
+
+-- The CLI control information element (Calling Line Identification), also used for talking party ID (TPI) restriction
+CliType   ::= INTEGER
+{                                      -- COS
+    default                       (0), -- 0	 Use the standard setting (default)
+    presentationNotRestricted     (1), -- 2  CLI presentation not restricted
+    presentationRestricted        (2)  -- 3  CLI presentation restricted
+}
+
+-- Information about the state of the call, used in call setup
+CallStateType ::= INTEGER
+{                                      -- COS
+    progressing                   (0), -- 0
+    callQueued                    (1), -- 1
+    subscriberPaged               (2), -- 2
+    ringing                       (3), -- ne
+    callContinue                  (4), -- 3
+    hangTimeExpired               (5)  -- 4
+}
+
+--  Information about the disconnect cause of the call
+DisconnectType  ::= INTEGER
+{
+                                                 -- COS:
+    causeUnknown                          (0),   --   0
+    userRequestedDisconnect               (1),   --   1
+    calledPartyBusy                       (2),   --   2
+    calledPartyNotReachable               (3),   --   3
+    calledPartyDoesNotSupportEncryption   (4),   --   4
+    congestionInInfrastructure            (5),   --   5
+    notAllowedTrafficCase                 (6),   --   6
+    incompatibleTrafficCase               (7),   --   7
+    requestedServiceNotAvailable          (8),   --   8
+    preEmptiveUseOfResource               (9),   --   9
+    invalidCallIdentifier                 (10),  --  10
+    callRejectedByCalledParty             (11),  --  11
+    noIdleCcEntity                        (12),  --  12
+    expiryOfTimer                         (13),  --  13
+    dmxRequestedDisconnect                (14),  --  14
+    acknowledgedServiceNotCompleted       (15),  --  15
+
+    resourceFailed                        (16),  --  ne
+    unknownResource                       (17),  --  ne
+    inactiveResource                      (18),  --  ne
+    resourceUsedInOtherCall               (19),  --  ne
+
+    cellReSelection                       (20),  --  32
+    callSetupRepetition                   (21),  --  33
+    icLeavingCallNoCallEnd                (22),  --  34: Include Call: The issuer leaves the call, but the call
+                                                 --      shall not be ended
+
+    unknownTetraIdentity		  (23),  --  16
+    ssSpecificDisconnection		  (24),  --  17
+    unknownExternalSubscriberIdentity     (25),  --  18
+    callRestorationOfOtherUserFailed      (26),  --  19
+    wrongCommunicationType                (27),  --  ne
+    callTransferSubscriberError           (28),  --  ne Call Transfer: Calling Party of CC-Setup-Req PDU
+                                                 --                    is not registered
+    unknownVirtualDest                    (29),  --  InterceptFailCause 1
+    routingFailureToVirtualDest           (30),  --  InterceptFailCause 2
+    offlineCircuitModeMonitoringGateway   (31),  --  InterceptFailCause 3
+    unknownCallIdentifier                 (32),  --  InterceptFailCause 4
+    monToSameVirtualDestAlreadyActive     (33),  --  InterceptFailCause 7
+    unknownMonitoringHandle               (34),  --  ne: Connection refused because the monitoring handle is unknown
+    callInWrongState                      (35)   --  ne: Monitoring of call refused because call is in the wrong state
+}
+
+-- Bit String for requesting monitoring services
+MonitoringService  ::= BIT STRING
+{                                 --  COS:
+    registration            (0),  --    0: Registration, Deregistration, Roaming (MM)       (individual monitoring only)
+    sdsInitiator            (1),  --  1,3: Short Data Service Unitdata as Initiator (SDS)   (individual monitoring only)
+    sdsDestination          (2),  --  2,4: Short Data Service Unitdata as Destination (SDS) (individual monitoring only)
+    circuitModeInitiator    (3),  --    5: Circuit Mode Voice / Data Calls as Initiator (CC)
+    circuitModeDestination  (4),  --    6: Circuit Mode Voice / Data Calls as Destination (CC)
+    supplService            (5),  --    7: (not implemented) Supplementary Service (SS)
+    automaticVoiceIntercept (6)   -- 8-12: Automatic Circuit Mode Call Control Intercept    (fleet monitoring only)
+}
+
+-- Information about the state of the call
+MonCallStateType ::= INTEGER
+{
+    callSetup                     (0),
+    callSetupReject               (1),
+    alertFromCalledParty          (2),
+    acceptFromCalledParty         (3),
+    callConnect                   (4),  -- Call is online
+    includeCallSetup              (5),
+    includeCallSetupReject        (6),
+    includeAlertFromCalledParty   (7),
+    includeAcceptFromCalledParty  (8),
+    includeCallConnect            (9),  -- Included party is online
+    groupCallWithActionFromMember (10)  -- Activity of a monitored subscriber in a group call
+}
+
+-- Used for registration  monitoring service: Roaming, Migrating, Periodic, ...
+LocUpdateType ::= INTEGER
+{
+    roamingLocationUpdate          (0),
+    migratingLocationUpdate        (1),
+    periodicLocationUpdate         (2),
+    iTSIAttach                     (3),
+    callRestorationRoamingUpdate   (4),
+    callRestorationMigratingUpdate (5),
+    demandLocationUpdate           (6),
+    disabledMSUpdate               (7),
+    implicitLocationUpdate         (8)
+}
+
+-- Location of a monitored subscriber
+LocationAreaType ::= SEQUENCE
+{
+    locationArea       [0] IMPLICIT Integer16,  -- 14 bits are defined in ETS 300 392-1 for TETRA Location Areas,
+                                                -- 0x4000-0x7FFF for Gateway Location Areas
+    locationName       [1] IMPLICIT OCTET STRING (SIZE(0..32)) OPTIONAL, -- Location area of the subscriber
+    cell               [2] IMPLICIT INTEGER (0..1024) OPTIONAL,          -- Optional cell information
+    cellName           [4] IMPLICIT OCTET STRING (SIZE(0..32)) OPTIONAL  -- Cell name
+}
+
+-- Used in ACAPI-Authorization-Req and ACAPI-Authorization
+AuthorizationMethodType ::= INTEGER
+{
+    plain                         (0),   -- Uncrypted password authentication
+    secureHashAlgorithm           (1),   -- Secure Hash Algorithm of random string + password
+    tetra                         (2)    -- (not implemented) TETRA authentication, as defined in ETS 300 392-7
+}
+
+
+
+
+-- Identification of a channel or subchannel on a E1 trunk
+LeasedLineType ::= SEQUENCE
+{
+    trunkID            [0] IMPLICIT INTEGER,                 -- ID of E1/So trunk
+    channelID          [1] IMPLICIT INTEGER (1..31),         -- ID of 64 kbps channel on E1 (1..31) or So (1..2) trunk
+    subChannelID       [2] IMPLICIT INTEGER (1..8) OPTIONAL  -- Optional ID of 8 kbps subchannel (TETRA coded speech)
+}
+
+-- Identification for a dialup line
+DialupLineType ::= SEQUENCE
+{
+    destinationID      [0] IMPLICIT DialingString,           -- Dial-in number (called party)
+    sourceID           [1] IMPLICIT DialingString OPTIONAL,  -- Source number (calling party)
+    subChannelID       [2] IMPLICIT INTEGER (1..8) OPTIONAL  -- Optional ID of 8 kbps subchannel (TETRA coded speech)
+}
+
+-- Line Information for call control and monitoring.
+-- With this type, a line ressource can be identified unambiguously
+LineInformationType ::= CHOICE
+{
+    leasedLineInfo     [0] IMPLICIT LeasedLineType,        -- ID of E1/So leased line channels and subchannel
+    dialupLineHandle   [1] IMPLICIT INTEGER                -- Handle for dialup line channels and subchannel
+}
+
+
+-- (High level) Line Information for call control and monitoring
+LineResourceInfo ::= CHOICE
+{
+    leasedLineID       [0] IMPLICIT INTEGER,               -- ID of E1/So trunk
+    dialupLineInfo     [1] IMPLICIT DialupLineType         -- For dialup line channels and subchannel
+}
+
+
+-- Information about the state of a line resource
+LineInfoAckType ::= SEQUENCE
+{
+    lineInfo           [0] LineInformationType,            -- Identification of the line resource (leased line or dialup
+                                                           -- line info)
+    lineState          [1] IMPLICIT INTEGER                -- State of the selected line resource
+                           {
+                              lineConnected                (0),
+                              lineNotConnected             (1),
+                              parameterError               (2),
+                              unknownLineResource          (3),
+                              inactiveLineResource         (4),
+                              lineResourceUsedInOtherCall  (5)
+                           }
+}
+
+
+
+-- Bitmask to represent the availability of the 64k channels on a S0- or E1-Link.
+-- "Bit x = True" means "channel (x+1) is available".
+ChannelMask-64k ::= SEQUENCE
+{
+    trunkID            [0] IMPLICIT INTEGER,                   -- ID of E1/So trunk
+    channelMask64k     [1] IMPLICIT BIT STRING (SIZE (2..31))  -- Mask for 64 kbps channels on E1/So trunk
+}
+
+-- Bitmask to represent the availability of the 8k subchannels on a S0- or E1-Link.
+-- "Bit x = True" means "channel (x+1) is available".
+ChannelMask-8k ::= SEQUENCE
+{
+    trunkID            [0] IMPLICIT INTEGER,                     -- ID of E1/So trunk
+    channelMask8k      [1] IMPLICIT BIT STRING (SIZE (16..248))  -- Mask for 8 kbps subchannels on E1/So trunk,
+                                                                 -- Max. 240 bits
+}
+
+-- Datatype to represent information regarding a dialup line
+DialupLineMask ::= SEQUENCE
+{
+    destinationID      [0] IMPLICIT DialingString,               -- Dial-in ID (called party)
+    lineHandle         [1] IMPLICIT INTEGER,                     -- Handle for dialup line channels and subchannel
+    lineState          [2] IMPLICIT LineInfoAckType,             -- Identification and state of the line resource
+    sourceID           [3] IMPLICIT DialingString OPTIONAL,      -- Source ID (calling party)
+    subChannelID       [4] IMPLICIT INTEGER (1..8) OPTIONAL      -- Optional ID of 8 kbps subchannel (TETRA coded speech)
+}
+
+-- Contains information about the state of line ressources (E1/So trunk or dialup line)
+LineInformationMask ::= CHOICE
+{
+    channelMask64k     [0] IMPLICIT ChannelMask-64k,       -- For E1/So trunks with 64k channels
+    channelMask8k      [1] IMPLICIT ChannelMask-8k,        -- For E1/So trunks with 8k subchannels
+    dialupMask         [2] IMPLICIT DialupLineMask         -- For dialup lines
+}
+
+-- Contains information about the state of the connection between A-CAPI Application Platform and TETRA Switch
+SystemConnectionState ::= SEQUENCE
+{
+    connectionID       [0] IMPLICIT INTEGER,
+    connectionName     [1] IMPLICIT IA5String (SIZE (0..32)),
+    connectionState    [2] IMPLICIT INTEGER
+                           {
+                              connected              (0),  -- Connection is established
+                              disconnected           (1),  -- Connection is not established
+                              timedOut               (2)   -- Connection is timed out
+                           }
+}
+
+-- Information about the resource load of the A-CAPI Application Platform
+ResourceLoadInfo  ::= SEQUENCE
+{
+    resourceID         [0] IMPLICIT INTEGER,                     -- Numeric ID of the requested resource
+    resourceName       [1] IMPLICIT IA5String (SIZE (0..32)),    -- Name of the requested resource
+    resourceLoad       [2] IMPLICIT INTEGER
+                           {
+                              normalLoad             (0),  -- Resource is in normal load state
+                              highLoad               (1),  -- Resource is in high load state
+                              overLoad               (2)   -- Resource is in overload state, data may be lost
+                            },
+    actBufferLoad      [3] IMPLICIT INTEGER,               -- Number (sum total) of messages in the buffer
+    maxBufferLoad      [4] IMPLICIT INTEGER                -- Size of the buffer
+}
+
+-- TETRA predefined values for the maximal call time
+TetraCallTime ::= INTEGER
+{
+    infiniteTime                  (0),   -- (default)
+    seconds30                     (1),
+    seconds45                     (2),
+    seconds60                     (3),
+    minutes2                      (4),
+    minutes3                      (5),
+    minutes4                      (6),
+    minutes5                      (7),
+    minutes6                      (8),
+    minutes8                      (9),
+    minutes10                     (10),
+    minutes12                     (11),
+    minutes15                     (12),
+    minutes20                     (13),
+    minutes30                     (14),
+    reserved                      (15)
+}
+
+-- TETRA predefined values for the maximal call setup time
+CallSetupTime ::= INTEGER
+{
+    usePredefinedValue            (0),   -- (default)
+    second1                       (1),
+    seconds2                      (2),
+    seconds5                      (3),
+    seconds10                     (4),
+    seconds20                     (5),
+    seconds30                     (6),
+    seconds60                     (7)
+}
+
+-- Information about uplink RSSI and path delay.
+-- RSSI = Averaged signal level received by the base station or an equivalent signal quality measurement.
+-- The path delay is a representation of the distance of the mobile station to the serving base station.
+MacFacilityType  ::= SEQUENCE
+{
+    uplinkRSSI         [0] IMPLICIT Integer16,             -- (0..16383) Absolute uplink RSSI in dBm,
+    pathDelay          [1] IMPLICIT Integer16              -- (0..16383) Delay of specific syncronisation signals
+}
+
+-- DGNA member state information
+DynGroupMemberState ::= SEQUENCE
+{
+    affectedSsi        [0] IMPLICIT TETRA-Address,         -- SSI of the group member
+    attachmentState    [1] IMPLICIT INTEGER
+                           {
+                              attachmentFailedUnknownState (0),
+                              permanentlyAttached          (1),
+                              noAttachmentUnknownState     (2)
+                           }
+}
+
+-- Additional information for Call Transfer
+CallTransferType ::= SEQUENCE
+{
+    requestingSsi      [0] IMPLICIT TETRA-Address          -- SSI of the requesting application
+}
+
+-- Conditions for call forwarding
+CallForwardingType ::= BIT STRING
+{
+    unconditional                 (0),   -- CFU (Call Forwarding Unconditional)
+    onBusy                        (1),   -- CFB (Call Forwarding on Busy)
+    onNoReply                     (2),   -- CFNRy (Call Forwarding on No Reply)
+    onNotReachable                (3)    -- CFNRc (Call Forwarding on Not Reachable)
+}
+
+-- Service selection for call forwarding
+ForwardingServiceType ::= INTEGER
+{
+    callControl                   (0),   -- Call Control (Speech and Circuit Mode Data)
+    shortData                     (1),   -- Short Data Services (SDS + Status)
+    callControlAndSds             (2)    -- Both, Call Control and Short Data Services
+}
+
+-- Result codes from SS-CallForwardActivate-Ack and SS-CallForwardDeactivate-Ack
+CallForwardingResultType ::= INTEGER
+{
+    generalAccept                 (0),   -- The operation succeeded
+    generalReject                 (1),   -- The operation failed. No specific return code.
+    callForwardingNotAvailable    (2),   -- The requested service is not available
+    unknownForwardedParty         (3),   -- The subscriber the call forwarding is requested for is unknown
+    unknownForwardToParty         (4),   -- The target subscriber for the call forwarding is unknown
+    staticCallForwardingIsActive  (5),   -- Static call forwarding from NM operator is active
+    dynamicCallForwardingIsActive (6),   -- Call forwarding from another application is active
+    permissionDenied              (7),   -- Application not authorised to assign call forwarding for this subscriber
+    invalidElementInPdu           (8)    -- The maximum length of a bit field has been exceeded
+}
+
+-- Defines how the assigned OOCI number is used as CLI in Call Control and SDS services
+UseOociAsCliType ::= BIT STRING
+{
+    callControlToOOCI             (0),  -- Use OOCI as CLI in call control service to other OOCI addresses
+    callControlToSSI              (1),  -- Use OOCI as CLI in call control service to SSI addresses
+    sdsToOOCI                     (2),  -- Use OOCI as CLI in SDS to other OOCI addresses
+    sdsToSSI                      (3)   -- Use OOCI as CLI in SDS to SSI addresses
+}
+
+
+-- Result codes from SS-ObjectIdentityAssign-Ack and SS-ObjectIdentityDeassign-Ack
+OociResultType ::= INTEGER
+{
+                                        -- (ADC) means: This returncode is used in:
+                                        --       Assign (A), Deassign (D), Cancel (C) - PDU
+    generalAccept                 (0),  -- (ADC) The operation succeeded. This code is also used if the assignment
+                                        --       was already set before.
+    generalReject                 (1),  -- (ADC) The operation failed. No specific return code.
+    serviceNotAvailable           (2),  -- (ADC) The requested service is not available
+    unknownAffectedPartySSI       (4),  -- (AD)  The subscriber the OOCA operation is requested for is unknown
+    invalidGatewayId              (7),  -- (ADC) The gateway identity is invalid
+    objectIdentityOutOfRange      (8),  -- (AD)  The object identity is out of range
+    noFreeMemoryForOOCI           (9),  -- (A)   The infrastructure is not able to fulfil the request due to memory
+                                        --       limitations
+    affectedPartyIsNoIndividual   (10), -- (AD)  The subscriber the OOCA operation is requested for is not an
+                                        --       individual subscriber
+    permissionDenied              (11)  -- (ADC) The application is not authorised to assign OOCA services for this
+                                        --       subscriber
+}
+
+-- When information does not fit into one PDU, this type gives info about how many packets will follow
+FragmentationInfoType ::= SEQUENCE
+{
+    packetNumber       [0] IMPLICIT INTEGER,               -- Number of this packet (one-based, i.e. 1,2,3,...)
+    totalNumber        [1] IMPLICIT INTEGER                -- Total number of packets for transferring the information
+}
+
+-- Information about active Call Forwarding settings in the Application Platform
+CallForwardingEntryType ::= SEQUENCE
+{
+    forwardedPartySSI  [0] IMPLICIT TETRA-Address,         -- Individual address, which shall be forwarded
+    forwardToParty     [1] AddressType,                    -- Address of forwarding target
+    forwardingType     [2] IMPLICIT CallForwardingType,    -- Unconditional, on busy, on no reply, on not reachable
+    forwardingService  [3] IMPLICIT ForwardingServiceType  -- None, Call Control, Short Data Service, CC + SDS
+}
+
+-- (V5) Specifies the reason why an incoming call was forwarded to the current target
+CallForwardingReasonType ::= INTEGER
+{
+    unconditional                 (0),  -- The call was forwarded due to CFU (Call Forwarding Unconditional)
+    onBusy                        (1),  -- The call was forwarded due to CFB (Call Forwarding on Busy)
+    onNoReply                     (2),  -- The call was forwarded due to CFNRy (Call Forwarding on No Reply)
+    onNotReachable                (3),  -- The call was forwarded due to CFNRc (Call Forwarding on Not Reachable)
+    specialIdentityConversion     (4),  -- The call was forwarded due to a Special Identity Conversion
+    generalAuthorisationRequest   (5)   -- The call was forwarded due to a Request for Call Authorization
+}
+
+-- Information about active OOCI settings in the Application Platform
+OociEntryType ::= SEQUENCE
+{
+    assignedOOCI       [0] IMPLICIT ISDN-Address,          -- Individual ISDN type address, which shall be assigned
+                                                           -- to another party
+    affectedPartySSI   [1] IMPLICIT TETRA-Address,         -- Individual address to which the number shall be assigned
+    useOociAsCLI       [2] IMPLICIT UseOociAsCliType OPTIONAL -- Defines if and how the assigned OOCI is used for CLI
+}
+
+-- Abort causes for supplementary services
+SS-AbortCauseType ::= CHOICE
+{							     -- COS
+    callIdentification              [1] IMPLICIT INTEGER,    --   1
+    callReport                      [2] IMPLICIT INTEGER,    --   2
+    talkingPartyIdentification      [3] IMPLICIT INTEGER,    --   3
+    callForwarding                  [4] IMPLICIT INTEGER,    --   4
+    listSearchCall                  [5] IMPLICIT INTEGER,    --   5
+    callAuthorizedByDispatcher      [6] IMPLICIT INTEGER     --   6
+                                        {                                           -- COS: Bitmap!
+                                           restrictedGeneralOrUndefined       (0),  -- 0
+                                           restrictedBasicService             (1),  -- 1
+                                           restrictedDestinationAddress       (2),  -- 2
+                                           restrictedSourceAddress            (3),  -- 4
+                                           restrictedArea                     (4)   -- 8
+                                        },
+    shortNumberAddressing           [7] IMPLICIT INTEGER,    --   7
+    areaSelection                   [8] IMPLICIT INTEGER,    --   8
+    accessPriority                  [9] IMPLICIT INTEGER,    --   9
+    priorityCall                    [10] IMPLICIT INTEGER,   --  10
+    callWaiting                     [11] IMPLICIT INTEGER,   --  11
+    callHold                        [12] IMPLICIT INTEGER,   --  12
+    callCompletionToBusySubscriber  [13] IMPLICIT INTEGER,   --  13
+    lateEntry                       [14] IMPLICIT INTEGER,   --  14
+    preEmptivePriorityCall          [16] IMPLICIT INTEGER,   --  16
+    includeCall                     [17] IMPLICIT INTEGER,   --  17
+    barringOfOutgoingCalls          [18] IMPLICIT INTEGER,   --  18
+    barringOfIncomingCalls          [19] IMPLICIT INTEGER,   --  19
+    discreetListening               [20] IMPLICIT INTEGER,   --  20
+    ambienceListening               [21] IMPLICIT INTEGER    --  21
+                                         {                                        --COS
+                                            reserved                           (0),  -- 0
+                                            serviceNotSupported                (1),  -- 1
+                                            userNotAuthorized                  (2),  -- 2
+                                            affectedUserBusy                   (3),  -- 3
+                                            secondListeningPartyNotIncluded    (4),  -- 4
+                                            unknownTETRAIdentity               (5),  -- 5
+                                            parametersNotValid                 (6),  -- 6
+                                            insufficientInformation            (7),  -- 7
+                                            rejectedForUndefinedReason         (8)   -- 8
+                                         },
+    dynamicGroupNumberAssignment    [22] IMPLICIT INTEGER,   --  22
+    callCompletionOnNoReply         [23] IMPLICIT INTEGER,   --  23
+    callRetention                   [24] IMPLICIT INTEGER    --  24
+}
+
+-- Accessnet Common Application Programming Interface
+END
