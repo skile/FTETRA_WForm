@@ -20,24 +20,27 @@ using namespace System::Runtime::InteropServices;
 
 bool call_tetra_interface ( Config_data^ data_ini, TetraInterface* tetra );
 
-/*static void tetra_start()
+
+static void start_form( System::Object^ object_consumidor )
 {
-	
-	//IT WAS IN THE ORIGINAL FORM
 
-	// Enabling Windows XP visual effects before any controls are created
-	Application::EnableVisualStyles();
-	Application::SetCompatibleTextRenderingDefault(false); 
+	//if (!global_form){
+		//IT WAS IN THE ORIGINAL FORM
 
-	// Create the main window and run it
-	Application::Run(gcnew Form1());
+		// Enabling Windows XP visual effects before any controls are created
+		Application::EnableVisualStyles();
+		Application::SetCompatibleTextRenderingDefault( false ); 
 
-
-}*/
+		// Create the main window and run it
+		Application::Run( gcnew Form1( dynamic_cast<Consumidor^>( object_consumidor ) ) );
+	//}
+}
 
 [STAThreadAttribute]
 int main(array<System::String ^> ^args)
 {
+//	static Form1^ global_form;
+
 	try
 	{
 		Config_data^ data_ini = gcnew Config_data();
@@ -143,21 +146,6 @@ int main(array<System::String ^> ^args)
 		visual_tetra->Start();
 
 
-
-		*/
-		//IT WAS IN THE ORIGINAL FORM
-
-		// Enabling Windows XP visual effects before any controls are created
-		Application::EnableVisualStyles();
-		Application::SetCompatibleTextRenderingDefault(false); 
-
-		// Create the main window and run it
-		Application::Run(gcnew Form1(consumidor));
-
-
-
-
-
 		/*
 		AsyncListenDelegate^ asyncListen = gcnew AsyncListenDelegate( manager, &TcpManager::listen );
 		System::IAsyncResult^ result = asyncListen->BeginInvoke( nullptr, nullptr );
@@ -179,6 +167,13 @@ int main(array<System::String ^> ^args)
 				line = System::Console::ReadLine();
 				campos = line->Split( separador, System::StringSplitOptions::RemoveEmptyEntries );
 				line = campos[0];
+				if ( line == "form" )
+				{
+					//Lanza la form con la información
+					Thread^ form = gcnew Thread( gcnew ParameterizedThreadStart( start_form ) );
+					form->Start( dynamic_cast<System::Object^>( consumidor ) );
+					
+				}
 				if ( line == "sds" )
 				{
 					consumidor->envia_sds( System::String::Format( "0:TEST_TEST:{0}:{1}:{2}", System::Convert::ToInt32( campos[1] ), campos[2]->Length, campos[2] ) );

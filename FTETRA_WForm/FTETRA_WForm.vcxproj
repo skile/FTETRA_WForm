@@ -57,7 +57,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>
       </AdditionalDependencies>
-      <SubSystem>Windows</SubSystem>
+      <SubSystem>Console</SubSystem>
       <EntryPointSymbol>main</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
@@ -105,11 +105,6 @@
     <ClCompile Include="TetraInterface.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="BaseTypes.h" />
-    <ClInclude Include="CAcapiControl.h" />
-    <ClInclude Include="CAcapiDll.h" />
-    <ClInclude Include="CAcapiDllInterface.h" />
-    <ClInclude Include="CDataLink.h" />
     <ClInclude Include="Config_data.h" />
     <ClInclude Include="Consumidor.h" />
     <ClInclude Include="CustomLogger.h" />
@@ -117,9 +112,6 @@
     <ClInclude Include="Form1.h">
       <FileType>CppForm</FileType>
     </ClInclude>
-    <ClInclude Include="IAcapiDllListener.h" />
-    <ClInclude Include="IDataLinkInterface.h" />
-    <ClInclude Include="IDataLinkListener.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="simula.h" />
     <ClInclude Include="stdafx.h" />

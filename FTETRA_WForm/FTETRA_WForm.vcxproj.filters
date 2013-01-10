@@ -95,30 +95,6 @@
     <ClInclude Include="TetraInterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="BaseTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CAcapiControl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CAcapiDll.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CAcapiDllInterface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CDataLink.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IAcapiDllListener.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IDataLinkInterface.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="IDataLinkListener.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="app.rc">
@@ -129,5 +105,10 @@
     <Library Include="acapi_dll.lib">
       <Filter>Resource Files</Filter>
     </Library>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Form1.resX">
+      <Filter>Resource Files</Filter>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
