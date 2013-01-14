@@ -15,18 +15,98 @@ CustomLogger::CustomLogger (int warningLevel, int modo)
 	this->color_code[7] = System::ConsoleColor::Magenta;		// 6-temporal pinpoint
 }
 
- bool CustomLogger::RegisterWriter ( System::String^ path )
+ bool CustomLogger::RegisterWriter ( System::String^ path_folder )
 {
 	try
 	{
-		this->log = TextWriter::Synchronized( File::AppendText( path ) );			// Thread-safe!!
+		if( System::IO::Directory::Exists( path_folder ) == false )
+		{
+			System::IO::Directory::CreateDirectory( path_folder );
+		}
+
+		//this->log = TextWriter::Synchronized( File::AppendText( System::String::Concat( path, System::DateTime::Now.ToString( "/yyyy-MM-dd_HH:mm:ss" ),".txt" ) ) );			// Thread-safe!!
+		
+		//System::String^ name_file = gcnew System::String (System::String::Format( "{0}/{1}.txt",path,System::DateTime::Now.ToString( "/yyyy-MM-dd_HH:mm:ss" ) ) ); 
+
+
+		//this->log = TextWriter::Synchronized( File::AppendText( path ) );			// Thread-safe!!
+		//return true;
+
+		//FileStream^ new_file = File::Create( System::String::Format( "{0}/{1}.txt", path, System::DateTime::Now.ToString( "/yyyy-MM-dd_HH:mm:ss" ) ) );
+		//System::File^ new_file = gcnew System::File ();
+		this->abs_file = System::String::Format( "{0}\{1}.txt", path_folder, System::DateTime::Now.ToString( "/yyyy-MM-dd_HH.mm.ss" ) );
+		//FileInfo^ file_info = gcnew FileInfo( abs_file );
+		this->log = TextWriter::Synchronized( File::AppendText( this->abs_file ) );			// Thread-safe!!
 		return true;
 	}
 	catch ( System::Exception^ e )
 	{
 		return false;
 	}
+	
+
+	/*
+	
+	try
+	{
+
+		//Comprueba si el directorio existe, y sino lo prueba
+		if(System::IO::Directory::Exists( NAME_FOLDER )==false)
+		{
+
+		System::IO::Directory::CreateDirectory( NAME_FOLDER );
+
+		}
+		
+		bool file_exists = File::Exists ( path );
+
+		//System::String::Format( "{0}/{1}",name_folder,name_file ); 
+		//FileAttributes ^aux_attributes= System::IO::File::FileAttributes (path);
+
+		FileInfo^ file_info = gcnew FileInfo( path );
+
+		if( (file_exists == true) &&( file_info->Length >MAX_LOG_SIZE ) == true )
+		{
+			//System::IO::File::Create( System::String::Concat( path, System::DateTime::Now.ToString( "yyyy-MM-dd_HH:mm:ss" ),".txt" ) );
+			//System::String::Format( "{0}/{1}.txt",NAME_FOLDER,System::DateTime::Now.ToString( "yyyy-MM-dd_HH:mm:ss" )  )  ); 
+
+			System::String^ name_file = gcnew System::String (System::String::Format( "{0}/{1}.txt",NAME_FOLDER,System::DateTime::Now.ToString( "yyyy-MM-dd_HH:mm:ss" ) ) ); 
+
+			System::String^ name_file2 = gcnew System::String (System::String::Format( "{1}.txt",System::DateTime::Now.ToString( "yyyy-MM-dd_HH:mm:ss" ) ) ); 
+
+			this->log = TextWriter::Synchronized ( File::AppendText( name_file2 ) );
+
+			
+		}
+		//this->folder_file = System::String::Format( "{0}/{1}",NAME_FOLDER,name_file ); 
+		//FileInfo^ file_info = gcnew FileInfo( path );
+
+		//this->log = TextWriter::Synchronized( File::AppendText( System::String::Format ( "{0}/{1}.txt",NAME_FOLDER,System::DateTime::Now.ToString( "yyyy-MM-dd_HH:mm:ss" ) ) ) );			// Thread-safe!!
+		return true;
+	}
+
+	catch ( System::Exception^ e )
+	{
+		return false;
+	}
+	*/
+	
 }
+
+
+void CustomLogger::Check_size (){
+
+		FileInfo^ file_info = gcnew FileInfo( this->abs_file );
+
+		int number = file_info->Length;
+
+		if(( file_info->Length > MAX_LOG_SIZE ) == true )
+		{			
+		this->abs_file = System::String::Format( "log_folder\{0}.txt", System::DateTime::Now.ToString( "/yyyy-MM-dd_HH.mm.ss" ) );
+
+		this->log = TextWriter::Synchronized( File::AppendText( this->abs_file ) );				
+		}
+ }
 
 /*
 	Modos de funcionamiento:
@@ -60,6 +140,9 @@ bool CustomLogger::Write ( System::String^ line, int warningLevel )
 				System::Console::ResetColor();
 			}
 		}
+		
+		this->Check_size();
+
 		return true;
 	}
 	catch ( System::Exception^ e )

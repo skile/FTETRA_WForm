@@ -44,6 +44,7 @@ public:
 	System::String^ config_xml_route;
 
 	System::String^	logger_txt;
+	System::String^	name_folder;
 	System::Int32	warning_level;
 
 	System::String^	db_dsn;

@@ -84,7 +84,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.ico" />
-    <None Include="config.xml" />
+    <None Include="config.xml">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="groups_1.xml" />
     <None Include="ReadMe.txt" />
     <None Include="subscriber_1.xml" />

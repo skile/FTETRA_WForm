@@ -15,11 +15,16 @@ bool Config_data::parse_data ( System::String^ xml_document )
 		xd->Load( xml_document );
 
 		XmlNode^ node;
+//ORIGINAL::::
+		//node = xd->SelectSingleNode("/fr_tetra/logger");
+		//this->logger_txt = node->ChildNodes->Item(0)->InnerText;
+		//this->warning_level= System::Convert::ToInt32( node->ChildNodes->Item(1)->InnerText );
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 		node = xd->SelectSingleNode("/fr_tetra/logger");
-		this->logger_txt = node->ChildNodes->Item(0)->InnerText;
+		this->name_folder = node->ChildNodes->Item(0)->InnerText;
 		this->warning_level= System::Convert::ToInt32( node->ChildNodes->Item(1)->InnerText );
-
+		
 		node = xd->SelectSingleNode("/fr_tetra/db");
 		this->db_dsn		= node->ChildNodes->Item(0)->InnerText;
 		this->db_uid		= node->ChildNodes->Item(1)->InnerText;

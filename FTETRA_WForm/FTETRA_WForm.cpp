@@ -44,7 +44,7 @@ int main(array<System::String ^> ^args)
 	try
 	{
 		Config_data^ data_ini = gcnew Config_data();
-
+		
 		if ( ! data_ini->parse_data("config.xml") )
 		{
 			System::Console::WriteLine( "Unable to parse config data" );
@@ -56,7 +56,7 @@ int main(array<System::String ^> ^args)
 
 		CustomLogger^ logger = gcnew CustomLogger( data_ini->warning_level, 2 );			// escribirá con un nivel >= 0, en la consola y el log
 
-		if ( ! logger->RegisterWriter( data_ini->logger_txt ) )
+		if ( ! logger->RegisterWriter( data_ini->name_folder ) )
 		{
 			System::Console::WriteLine( "Unable to register logger" );
 			System::Console::ReadLine();

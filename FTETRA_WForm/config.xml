@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <fr_tetra>
   <logger>
-    <txt>log.txt</txt>
+    <txt>log_folder</txt>
     <warning_level>0</warning_level>
   </logger>
   <db>
@@ -12,7 +12,7 @@
   <acapi>
     <user>app</user>
     <pwd>app</pwd>
-    <acapi_ip>172.31.1.1</acapi_ip>
+    <acapi_ip>172.31.1.6</acapi_ip>
     <app_ack_timeout_sec>160</app_ack_timeout_sec>
   </acapi>
   <!--
